@@ -36,7 +36,7 @@ void Decrypt(uint8_t *block, uint8_t *roundKeys)
 {
 	/*--------------------------------------*/
 	/* r6-r7	: temp use					*/
-	/* r8-r23	: plain text				*/
+	/* r8-r23	: cipher text				*/
 	/* r24 		: loop control				*/
 	/* r25		: const 0x02				*/
 	/* r26-r27	: X points to plain text	*/
@@ -76,22 +76,22 @@ void Decrypt(uint8_t *block, uint8_t *roundKeys)
 		//                s4  s5  s6  s7
 		// Cipher State   s8  s9  s10 s11
 		//                s12 s13 s14 s15
-		"ld 		r21, 		x+			\n\t"
-		"ld 		r22, 		x+			\n\t"
-		"ld 		r23, 		x+			\n\t"
-		"ld 		r20, 		x+			\n\t"
 		"ld 		r8, 		x+			\n\t"
 		"ld 		r9, 		x+			\n\t"
 		"ld 		r10, 		x+			\n\t"
 		"ld 		r11, 		x+			\n\t"
-		"ld 		r15, 		x+			\n\t"
 		"ld 		r12, 		x+			\n\t"
 		"ld 		r13, 		x+			\n\t"
 		"ld 		r14, 		x+			\n\t"
-		"ld 		r18, 		x+			\n\t"
-		"ld 		r19, 		x+			\n\t"
+		"ld 		r15, 		x+			\n\t"
 		"ld 		r16, 		x+			\n\t"
 		"ld 		r17, 		x+			\n\t"
+		"ld 		r18, 		x+			\n\t"
+		"ld 		r19, 		x+			\n\t"
+		"ld 		r20, 		x+			\n\t"
+		"ld 		r21, 		x+			\n\t"
+		"ld 		r22, 		x+			\n\t"
+		"ld 		r23, 		x			\n\t"
 		// set currentRound
 		"ldi 		r24,		40			\n\t"
 		// used for const 0x02
@@ -123,7 +123,7 @@ void Decrypt(uint8_t *block, uint8_t *roundKeys)
 		"eor		r11,		r23			\n\t"
 		"eor		r23,		r15			\n\t"
 		"eor		r19,		r23			\n\t"
-	    // add_round_const_round_key
+	    // shift row, add_round_const_round_key
 		//                s4  s5  s6  s7
 		//                s9  s10 s11 s8
 		// Cipher State   s14 s15 s12 s13
@@ -146,61 +146,67 @@ void Decrypt(uint8_t *block, uint8_t *roundKeys)
 		"eor 		r16,		r6			\n\t"
 		"eor		r22,		r25			\n\t"
 		// shift_row_with_sub_column
-		// first part t0 and t1 are pairs.
+		//                s4  s5  s6  s7       r12 r13 r14 r15
+		//                s9  s10 s11 s8   =   r17 r18 r19 r16
+		// Cipher State   s14 s15 s12 s13  =   r22 r23 r20 r21
+		//                s3  s0  s1  s2       r11 r8  r9  r10
 		"movw		r6,			r8			\n\t"
-		"mov		r28,		r21			\n\t"
-		"ld			r8,			y			\n\t"
-		"mov		r28,		r19			\n\t"
-		"ld			r21,		y			\n\t"
-		"mov		r28,		r14			\n\t"
-		"ld			r19,		y			\n\t"
-		"mov		r28,		r10			\n\t"
-		"ld			r14,		y			\n\t"
-		"mov		r28,		r23			\n\t"
-		"ld			r10,		y			\n\t"
-		"mov		r28,		r17			\n\t"
-		"ld			r23,		y			\n\t"
 		"mov		r28,		r12			\n\t"
-		"ld			r17,		y			\n\t"
-		"mov		r28,		r6			\n\t"
+		"ld			r8,			y			\n\t"
+		"mov		r28,		r17			\n\t"
 		"ld			r12,		y			\n\t"
+		"mov		r28,		r23			\n\t"
+		"ld			r17,		y			\n\t"
+		"mov		r28,		r10			\n\t"
+		"ld			r23,		y			\n\t"
+		"mov		r28,		r14			\n\t"
+		"ld			r10,		y			\n\t"
+		"mov		r28,		r19			\n\t"
+		"ld			r14,		y			\n\t"
+		"mov		r28,		r21			\n\t"
+		"ld			r19,		y			\n\t"
+		"mov		r28,		r8			\n\t"
+		"ld			r21,		y			\n\t"
 		// second part
-		"mov		r28,		r22			\n\t"
-		"ld			r9,			y			\n\t"
-		"mov		r28,		r16			\n\t"
-		"ld			r22,		y			\n\t"
-		"mov		r28,		r15			\n\t"
-		"ld			r16,		y			\n\t"
-		"mov		r28,		r11			\n\t"
-		"ld			r15,		y			\n\t"
-		"mov		r28,		r20			\n\t"
-		"ld			r11,		y			\n\t"
-		"mov		r28,		r18			\n\t"
-		"ld			r20,		y			\n\t"
 		"mov		r28,		r13			\n\t"
-		"ld			r18,		y			\n\t"
-		"mov		r28,		r7			\n\t"
+		"ld			r9,			y			\n\t"
+		"mov		r28,		r18			\n\t"
 		"ld			r13,		y			\n\t"
+		"mov		r28,		r20			\n\t"
+		"ld			r18,		y			\n\t"
+		"mov		r28,		r11			\n\t"
+		"ld			r20,		y			\n\t"
+		"mov		r28,		r15			\n\t"
+		"ld			r11,		y			\n\t"
+		"mov		r28,		r16			\n\t"
+		"ld			r15,		y			\n\t"
+		"mov		r28,		r22			\n\t"
+		"ld			r16,		y			\n\t"
+		"mov		r28,		r7			\n\t"
+		"ld			r22,		y			\n\t"
 		"dec 		r24						\n\t"
 	"brne		enc_loop					\n\t"
+		//                s0  s1  s2  s3       r8  r9  r10 r11
+		//                s4  s5  s6  s7   =   r12 r13 r14 r15
+		// Cipher State   s8  s9  s10 s11  =   r16 r17 r18 r19
+		//                s12 s13 s14 s15      r20 r21 r22 r23
 		// store cipher text
-		"sub 		x,			#16			\n\t"
-		"st 		x+,			r21			\n\t"
-		"st 		x+,			r22			\n\t"
-		"st 		x+,			r23			\n\t"
-		"st 		x+,			r20			\n\t"
-		"st 		x+,			r8			\n\t"
-		"st 		x+,			r9			\n\t"
-		"st 		x+,			r10			\n\t"
-		"st 		x+,			r11			\n\t"
-		"st 		x+,			r15			\n\t"
-		"st 		x+,			r12			\n\t"
-		"st 		x+,			r13			\n\t"
-		"st 		x+,			r14			\n\t"
-		"st 		x+,			r18			\n\t"
-		"st 		x+,			r19			\n\t"
-		"st 		x+,			r16			\n\t"
-		"st 		x+,			r17			\n\t"
+		"st 		x-,			r23			\n\t"
+		"st 		x-,			r22			\n\t"
+		"st 		x-,			r21			\n\t"
+		"st 		x-,			r20			\n\t"
+		"st 		x-,			r19			\n\t"
+		"st 		x-,			r18			\n\t"
+		"st 		x-,			r17			\n\t"
+		"st 		x-,			r16			\n\t"
+		"st 		x-,			r15			\n\t"
+		"st 		x-,			r14			\n\t"
+		"st 		x-,			r13			\n\t"
+		"st 		x-,			r12			\n\t"
+		"st 		x-,			r11			\n\t"
+		"st 		x-,			r10			\n\t"
+		"st 		x-,			r9			\n\t"
+		"st 		x,			r8			\n\t"
 		// --------------------------------------
 		"pop 		r29			\n\t"
 		"pop 		r28			\n\t"
