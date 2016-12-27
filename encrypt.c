@@ -81,10 +81,10 @@ void Encrypt(uint8_t *block, uint8_t *roundKeys)
         "push        r28        \n\t"
         "push        r29        \n\t"
         // load plain text
-        // s13 s14 s15 s12
-        // s0  s1  s2  s3
-        // s7  s4  s5  s6
-        // s10 s11 s8  s9
+        //               s13 s14 s15 s12      r21 r22 r23 r20
+        //               s0  s1  s2  s3   =   r8  r9  r10 r11
+        // Cipher State: s7  s4  s5  s6   =   r15 r12 r13 r14
+        //               s10 s11 s8  s9       r18 r19 r16 r17
         "ld          r21,         x+        \n\t"
         "ld          r22,         x+        \n\t"
         "ld          r23,         x+        \n\t"
@@ -100,7 +100,7 @@ void Encrypt(uint8_t *block, uint8_t *roundKeys)
         "ld          r18,         x+        \n\t"
         "ld          r19,         x+        \n\t"
         "ld          r16,         x+        \n\t"
-        "ld          r17,         x+        \n\t"
+        "ld          r17,         x         \n\t"
         // set currentRound
         "ldi         r24,         40        \n\t"
         // used for const 0x02
@@ -109,7 +109,14 @@ void Encrypt(uint8_t *block, uint8_t *roundKeys)
         // encryption
     "enc_loop:                              \n\t"
         // shift_row_with_sub_column
-        // first part t0 and t1 are pairs.
+        //               s13 s14 s15 s12      r21 r22 r23 r20
+        //               s0  s1  s2  s3   =   r8  r9  r10 r11
+        // Cipher State: s7  s4  s5  s6   =   r15 r12 r13 r14
+        //               s10 s11 s8  s9       r18 r19 r16 r17
+        // s0'  = SBOX[s13]  s1'  = SBOX[s14]  s2'  = SBOX[s15]  s3'  = SBOX[s12]
+        // s4'  = SBOX[s0]   s5'  = SBOX[s1]   s6'  = SBOX[s2]   s6'  = SBOX[s3]
+        // s8'  = SBOX[s7]   s9'  = SBOX[s4]   s10' = SBOX[s5]   s11' = SBOX[s6]
+        // s12' = SBOX[s10]  s13' = SBOX[s11]  s14' = SBOX[s8]   s15' = SBOX[s9]
         "movw        r6,          r8        \n\t"
         "mov         r28,         r21       \n\t"
         "ld          r8,          y         \n\t"
@@ -145,6 +152,10 @@ void Encrypt(uint8_t *block, uint8_t *roundKeys)
         "mov         r28,         r7        \n\t"
         "ld          r13,         y         \n\t"
         // add_round_const_round_key
+        //               s0  s1  s2  s3       r8  r9  r10 r11
+        //               s4  s5  s6  s7   =   r12 r13 r14 r15
+        // Cipher State: s8  s9  s10 s11  =   r16 r17 r18 r19
+        //               s12 s13 s14 s15      r20 r21 r22 r23
         "ld          r6,          z+        \n\t"
         "eor         r8,          r6        \n\t"
         "ld          r6,          z+        \n\t"
@@ -163,6 +174,10 @@ void Encrypt(uint8_t *block, uint8_t *roundKeys)
         "eor         r15,         r6        \n\t"
         "eor         r16,         r25       \n\t"
         // mix column
+        //               s13 s14 s15 s12      r21 r22 r23 r20
+        //               s0  s1  s2  s3   =   r8  r9  r10 r11
+        // Cipher State: s7  s4  s5  s6   =   r15 r12 r13 r14
+        //               s10 s11 s8  s9       r18 r19 r16 r17
         // first column
         "eor         r15,         r18       \n\t"
         "eor         r18,         r8        \n\t"
@@ -182,23 +197,22 @@ void Encrypt(uint8_t *block, uint8_t *roundKeys)
         "dec         r24                    \n\t"
     "brne            enc_loop               \n\t"
         // store cipher text
-        "sub         x,           #16       \n\t"
-        "st          x+,          r21       \n\t"
-        "st          x+,          r22       \n\t"
-        "st          x+,          r23       \n\t"
-        "st          x+,          r20       \n\t"
-        "st          x+,          r8        \n\t"
-        "st          x+,          r9        \n\t"
-        "st          x+,          r10       \n\t"
-        "st          x+,          r11       \n\t"
-        "st          x+,          r15       \n\t"
-        "st          x+,          r12       \n\t"
-        "st          x+,          r13       \n\t"
-        "st          x+,          r14       \n\t"
-        "st          x+,          r18       \n\t"
-        "st          x+,          r19       \n\t"
-        "st          x+,          r16       \n\t"
-        "st          x+,          r17       \n\t"
+        "st          x-,          r17       \n\t"
+        "st          x-,          r16       \n\t"
+        "st          x-,          r19       \n\t"
+        "st          x-,          r18       \n\t"
+        "st          x-,          r14       \n\t"
+        "st          x-,          r13       \n\t"
+        "st          x-,          r12       \n\t"
+        "st          x-,          r15       \n\t"
+        "st          x-,          r11       \n\t"
+        "st          x-,          r10       \n\t"
+        "st          x-,          r9        \n\t"
+        "st          x-,          r8        \n\t"
+        "st          x-,          r20       \n\t"
+        "st          x-,          r23       \n\t"
+        "st          x-,          r22       \n\t"
+        "st          x,           r21       \n\t"
         // --------------------------------------
         "pop         r29        \n\t"
         "pop         r28        \n\t"

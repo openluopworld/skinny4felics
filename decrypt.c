@@ -81,10 +81,10 @@ void Decrypt(uint8_t *block, uint8_t *roundKeys)
         "push        r28        \n\t"
         "push        r29        \n\t"
         // load plain text
-        //                s0  s1  s2  s3
-        //                s4  s5  s6  s7
-        // Cipher State   s8  s9  s10 s11
-        //                s12 s13 s14 s15
+        //                s0  s1  s2  s3       r8  r9  r10 r11
+        //                s4  s5  s6  s7   =   r12 r13 r14 r15
+        // Cipher State   s8  s9  s10 s11  =   r16 r17 r18 r19
+        //                s12 s13 s14 s15      r20 r21 r22 r23
         "ld          r8,           x+        \n\t"
         "ld          r9,           x+        \n\t"
         "ld          r10,          x+        \n\t"
@@ -112,10 +112,10 @@ void Decrypt(uint8_t *block, uint8_t *roundKeys)
         // eor s0, s12
         // eor s12, s4
         // eor s8, s12
-        //                s4  s5  s6  s7
-        //                s8  s9  s10 s11
-        // Cipher State   s12 s13 s14 s15
-        //                s0  s1  s2  s3
+        //                s4  s5  s6  s7       r12 r13 r14 r15
+        //                s8  s9  s10 s11  =   r16 r17 r18 r19
+        // Cipher State   s12 s13 s14 s15  =   r20 r21 r22 r23
+        //                s0  s1  s2  s3       r8  r9  r10 r11
         // first column
         "eor         r8,          r20        \n\t"
         "eor         r20,         r12        \n\t"
@@ -133,10 +133,10 @@ void Decrypt(uint8_t *block, uint8_t *roundKeys)
         "eor         r23,         r15        \n\t"
         "eor         r19,         r23        \n\t"
         // shift row, add_round_const_round_key
-        //                s4  s5  s6  s7
-        //                s9  s10 s11 s8
-        // Cipher State   s14 s15 s12 s13
-        //                s3  s0  s1  s2
+        //                s4  s5  s6  s7       r12 r13 r14 r15
+        //                s8  s9  s10 s11  =   r16 r17 r18 r19
+        // Cipher State   s12 s13 s14 s15  =   r20 r21 r22 r23
+        //                s0  s1  s2  s3       r8  r9  r10 r11
         "ld          r6,          z+         \n\t"
         "eor         r12,         r6         \n\t"
         "ld          r6,          z+         \n\t"
@@ -159,6 +159,10 @@ void Decrypt(uint8_t *block, uint8_t *roundKeys)
         //                s9  s10 s11 s8   =   r17 r18 r19 r16
         // Cipher State   s14 s15 s12 s13  =   r22 r23 r20 r21
         //                s3  s0  s1  s2       r11 r8  r9  r10
+        // s0'  = INV[s4]   s1'  = INV[s5]   s2'  = INV[s6]   s3'  = INV[s7]
+        // s4'  = INV[s9]   s5'  = INV[s10]  s6'  = INV[s11]  s6'  = INV[s8]
+        // s8'  = INV[s14]  s9'  = INV[s15]  s10' = INV[s12]  s11' = INV[s13]
+        // s12' = INV[s3]   s13' = INV[s0]   s14' = INV[s1]   s15' = INV[s2]
         "movw        r6,          r8         \n\t"
         "mov         r28,         r12        \n\t"
         "ld          r8,          y          \n\t"
