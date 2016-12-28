@@ -156,6 +156,25 @@ void Encrypt(uint8_t *block, uint8_t *roundKeys)
         //               s4  s5  s6  s7   =   r12 r13 r14 r15
         // Cipher State: s8  s9  s10 s11  =   r16 r17 r18 r19
         //               s12 s13 s14 s15      r20 r21 r22 r23
+        #if defined(SCENARIO) && (SCENARIO_2 == SCENARIO)
+        "lpm         r6,          z+        \n\t"
+        "eor         r8,          r6        \n\t"
+        "lpm         r6,          z+        \n\t"
+        "eor         r9,          r6        \n\t"
+        "lpm         r6,          z+        \n\t"
+        "eor         r10,         r6        \n\t"
+        "lpm         r6,          z+        \n\t"
+        "eor         r11,         r6        \n\t"
+        "lpm         r6,          z+        \n\t"
+        "eor         r12,         r6        \n\t"
+        "lpm         r6,          z+        \n\t"
+        "eor         r13,         r6        \n\t"
+        "lpm         r6,          z+        \n\t"
+        "eor         r14,         r6        \n\t"
+        "lpm         r6,          z+        \n\t"
+        "eor         r15,         r6        \n\t"
+        "eor         r16,         r25       \n\t"
+        #else
         "ld          r6,          z+        \n\t"
         "eor         r8,          r6        \n\t"
         "ld          r6,          z+        \n\t"
@@ -173,6 +192,7 @@ void Encrypt(uint8_t *block, uint8_t *roundKeys)
         "ld          r6,          z+        \n\t"
         "eor         r15,         r6        \n\t"
         "eor         r16,         r25       \n\t"
+        #endif
         // mix column
         //               s13 s14 s15 s12      r21 r22 r23 r20
         //               s0  s1  s2  s3   =   r8  r9  r10 r11
