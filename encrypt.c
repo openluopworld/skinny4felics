@@ -252,6 +252,12 @@ void Encrypt(uint8_t *block, uint8_t *roundKeys)
     : [block] "x" (block), [roundKeys] "z" (roundKeys), [SBOX] "" (SBOX));
 }
 
+#elif defined MSP
+void Encrypt(uint8_t *block, uint8_t *roundKeys)
+{
+    /* Add here the cipher encryption implementation */
+}
+
 #else
 void Encrypt(uint8_t *block, uint8_t *roundKeys)
 {

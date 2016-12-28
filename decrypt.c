@@ -249,9 +249,16 @@ void Decrypt(uint8_t *block, uint8_t *roundKeys)
     : [block] "x" (block), [roundKeys] "z" (roundKeys), [INV_SBOX] "" (INV_SBOX));
 }
 
+#elif defined MSP
+void Decrypt(uint8_t *block, uint8_t *roundKeys)
+{
+    /* Add here the cipher decryption implementation */
+}
+
 #else
 void Decrypt(uint8_t *block, uint8_t *roundKeys)
 {
     /* Add here the cipher decryption implementation */
 }
+
 #endif

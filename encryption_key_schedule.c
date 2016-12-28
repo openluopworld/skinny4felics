@@ -154,9 +154,123 @@ void RunEncryptionKeySchedule(uint8_t *key, uint8_t *roundKeys)
         : [key] "" (key), [roundKeys] "" (roundKeys), [RC] "" (RC));
 }
 
+#elif defined MSP
+void RunEncryptionKeySchedule(uint8_t *key, uint8_t *roundKeys)
+{
+    /* r4-r11  : key state                   */
+    /* r12     : temp use                    */
+    /* r13     : currentRound                */
+    /* r14     : point to roundKeys          */
+    /* r15     : point to key and RC         */
+    asm volatile (
+        /*
+         * [r15-r12]: In MSPGCC, registers are passed starting with R15 and descending to R12.
+         *     For example, if two integers are passed,
+         *     the first is passed in R15 and the second is passed in R14.
+         * [r11-r4]:  r11-r4 must be pushed if used.
+         */
+        "push         r4            \n\t"
+        "push         r5            \n\t"
+        "push         r6            \n\t"
+        "push         r7            \n\t"
+        "push         r8            \n\t"
+        "push         r9            \n\t"
+        "push         r10           \n\t"
+        "push         r11           \n\t"
+        // k0  k1  k2  k3         k9  k15 k8  k13
+        // k4  k5  k6  k7         k10 k14 k12 k11
+        // k8  k9  k10 k11 -----> k0  k1  k2  k3
+        // k12 k13 k14 k15        k4  k5  k6  k7
+        // r4 (k1  k0)  r5 (k3  k2)
+        // r6 (k5  k4)  r7 (k7  k6)
+        // r8 (k9  k8)  r9 (k11 k10)
+        // r10(k13 k12) r11(k15 k14)
+        "mov          @r15+,        r4            \n\t"
+        "mov          @r15+,        r5            \n\t"
+        "mov          @r15+,        r6            \n\t"
+        "mov          @r15+,        r7            \n\t"
+        "mov          @r15+,        r8            \n\t"
+        "mov          @r15+,        r9            \n\t"
+        "mov          @r15+,        r10           \n\t"
+        "mov          @r15+,        r11           \n\t"
+        "sub          #8,           r1            \n\t"
+        "mov          %[RC],        r15           \n\t"
+        "mov          #40,          r13           \n\t"
+    "extend_loop:                                 \n\t"
+        // load round const
+        "mov.b        @r15+,        r12           \n\t"
+        "mov          r12,          0(r1)         \n\t"
+        // k0 eor
+        "and          #0x000f,      r12           \n\t"
+        "xor          r4,           r12           \n\t"
+        // store the first 4 bytes
+        "mov          r12,          0(r14)        \n\t"
+        "mov          r5,           2(r14)        \n\t"
+        // k4 eor
+        "mov          0(r1),        r12           \n\t"
+        "and          #0x0030,      r12           \n\t"
+        "rra          r12                         \n\t"
+        "rra          r12                         \n\t"
+        "rra          r12                         \n\t"
+        "rra          r12                         \n\t"
+        "xor          r6,           r12           \n\t"
+        // store the second 4 bytes
+        "mov          r12,          4(r14)        \n\t"
+        "mov          r7,           6(r14)        \n\t"
+        "add          #8,           r14           \n\t"
+        // state change
+        // r4 (k1  k0)  r5 (k3  k2)         r4 (k15 k9)  r5 (k13 k8)
+        // r6 (k5  k4)  r7 (k7  k6)         r6 (k14 k10) r7 (k11 k12)
+        // r8 (k9  k8)  r9 (k11 k10) -----> r8 (k1  k0)  r9 (k3  k2)
+        // r10(k13 k12) r11(k15 k14)        r10(k5  k4)  r11(k7  k6)
+        "mov          r8,           0(r1)         \n\t"
+        "mov          r9,           2(r1)         \n\t"
+        "mov          r10,          4(r1)         \n\t"
+        "mov          r11,          6(r1)         \n\t"
+        "mov          r4,           r8            \n\t"
+        "mov          r5,           r9            \n\t"
+        "mov          r6,           r10           \n\t"
+        "mov          r7,           r11           \n\t"
+        "mov          0(r1),        r4            \n\t"
+        "mov.b        r4,           r5            \n\t"
+        "swpb         r4                          \n\t"
+        "and          #0x00ff,      r4            \n\t"
+        "mov          6(r1),        r12           \n\t"
+        "mov.b        r12,          r6            \n\t"
+        "and          #0xff00,      r12           \n\t"
+        "xor          r12,          r4            \n\t"
+        "swpb         r6                          \n\t"
+        "and          #0xff00,      r6            \n\t"
+        "mov          4(r1),        r12           \n\t"
+        "mov.b        r12,          r11           \n\t"
+        "and          #0xff00,      r12           \n\t"
+        "xor          r12,          r5            \n\t"
+        "mov          2(r1),        r12           \n\t"
+        "and          #0xff00,      r12           \n\t"
+        "xor          r12,          r7            \n\t"
+        "mov          2(r1),        r12           \n\t"
+        "and          #0x00ff,      r12           \n\t"
+        "xor          r12,          r6            \n\t"
+        "dec          r13                         \n\t"
+        "jne          extend_loop                 \n\t"
+        "add          #2,           r1            \n\t"
+        /* ----------------------------------------- */
+        "pop         r11            \n\t"
+        "pop         r10            \n\t"
+        "pop         r9             \n\t"
+        "pop         r8             \n\t"
+        "pop         r7             \n\t"
+        "pop         r6             \n\t"
+        "pop         r5             \n\t"
+        "pop         r4             \n\t"    
+    :
+    : [key] "" (key), [roundKeys] "" (roundKeys), [RC] "" (RC));
+}
+
 #else
 void RunEncryptionKeySchedule(uint8_t *key, uint8_t *roundKeys)
 {
     /* Add here the cipher encryption key schedule implementation */
 }
+
 #endif
