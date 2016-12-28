@@ -65,6 +65,7 @@ void RunEncryptionKeySchedule(uint8_t *key, uint8_t *roundKeys)
         "push         r28        \n\t"
         "push         r29        \n\t"
         "movw         r26,        r24       \n\t"
+        "mov          r28,        r22       \n\t"
         "ldi          r23,        40        \n\t"
         // load_keys
         // r7  r8  r9  r10
@@ -87,9 +88,8 @@ void RunEncryptionKeySchedule(uint8_t *key, uint8_t *roundKeys)
         "ld           r20,        x+        \n\t"
         "ld           r21,        x+        \n\t"
         "ld           r22,        x+        \n\t"
-        "movw         r26,        r22       \n\t"
         "ldi          r30,        lo8(RC)   \n\t"
-        "ldi          r31,        hi8(Rc)   \n\t"
+        "ldi          r31,        hi8(RC)   \n\t"
     "key_schedule_start:                    \n\t"
         // add_round_const
         "lpm          r24,        z+        \n\t"
@@ -102,14 +102,14 @@ void RunEncryptionKeySchedule(uint8_t *key, uint8_t *roundKeys)
         "mov          r6,         r11       \n\t"
         "eor          r6,         r24       \n\t"
         // store_round_keys
-        "st           x+,         r5        \n\t"
-        "st           x+,         r8        \n\t"
-        "st           x+,         r9        \n\t"
-        "st           x+,         r10       \n\t"
-        "st           x+,         r6        \n\t"
-        "st           x+,         r12       \n\t"
-        "st           x+,         r13       \n\t"
-        "st           x+,         r14       \n\t"
+        "st           y+,         r5        \n\t"
+        "st           y+,         r8        \n\t"
+        "st           y+,         r9        \n\t"
+        "st           y+,         r10       \n\t"
+        "st           y+,         r6        \n\t"
+        "st           y+,         r12       \n\t"
+        "st           y+,         r13       \n\t"
+        "st           y+,         r14       \n\t"
         "dec          r23                   \n\t"
     "breq             key_schedule_exit     \n\t"
         // 0  1  2  3         9  15 8  13

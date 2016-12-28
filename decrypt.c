@@ -46,6 +46,7 @@ void Decrypt(uint8_t *block, uint8_t *roundKeys)
     /* r24      : loop control              */
     /* r25      : const 0x02                */
     /* r26-r27  : X points to plain text    */
+    /* r28-r29  : y points to inverse sbox  */
     /* r30-r31  : Z points to roundKeys     */
     /* -------------------------------------*/
     // s0  s1  s2  s3       r8  r9  r10 r11
@@ -101,11 +102,17 @@ void Decrypt(uint8_t *block, uint8_t *roundKeys)
         "ld          r21,          x+        \n\t"
         "ld          r22,          x+        \n\t"
         "ld          r23,          x         \n\t"
+        // point to the round keys of last round
+        "ldi         r24,          255       \n\t"
+        "clr         r25                     \n\t"
+        "add         r30,          r24       \n\t"
+        "adc         r31,          r25       \n\t"
+        "adiw        r30,          57        \n\t"
         // set currentRound
         "ldi         r24,          40        \n\t"
         // used for const 0x02
         "ldi         r25,          0x02      \n\t"
-        "ldi         r29,          hi8(SBOX_INV)\n\t"
+        "ldi         r29,          hi8(INV_SBOX)\n\t"
         // encryption
     "dec_loop:                               \n\t"
         // mix column
@@ -153,6 +160,7 @@ void Decrypt(uint8_t *block, uint8_t *roundKeys)
         "eor         r19,         r6         \n\t"
         "ld          r6,          z+         \n\t"
         "eor         r16,         r6         \n\t"
+        "sbiw        r30,         16         \n\t"
         "eor         r22,         r25        \n\t"
         // shift_row_with_sub_column
         //                s4  s5  s6  s7       r12 r13 r14 r15
@@ -178,10 +186,10 @@ void Decrypt(uint8_t *block, uint8_t *roundKeys)
         "ld          r14,         y          \n\t"
         "mov         r28,         r21        \n\t"
         "ld          r19,         y          \n\t"
-        "mov         r28,         r8         \n\t"
+        "mov         r28,         r6         \n\t"
         "ld          r21,         y          \n\t"
         // second pa  rt
-        "mov          r28,        r13        \n\t"
+        "mov         r28,         r13        \n\t"
         "ld          r9,          y          \n\t"
         "mov         r28,         r18        \n\t"
         "ld          r13,         y          \n\t"
@@ -198,28 +206,30 @@ void Decrypt(uint8_t *block, uint8_t *roundKeys)
         "mov         r28,         r7         \n\t"
         "ld          r22,         y          \n\t"
         "dec         r24                     \n\t"
-    "brne            enc_loop                \n\t"
+    "breq            dec_exit                \n\t"
+    "rjmp            dec_loop                \n\t"
+    "dec_exit:                               \n\t"
         //                s0  s1  s2  s3       r8  r9  r10 r11
         //                s4  s5  s6  s7   =   r12 r13 r14 r15
         // Cipher State   s8  s9  s10 s11  =   r16 r17 r18 r19
         //                s12 s13 s14 s15      r20 r21 r22 r23
         // store cipher text
-        "st          x-,          r23        \n\t"
-        "st          x-,          r22        \n\t"
-        "st          x-,          r21        \n\t"
-        "st          x-,          r20        \n\t"
-        "st          x-,          r19        \n\t"
-        "st          x-,          r18        \n\t"
-        "st          x-,          r17        \n\t"
-        "st          x-,          r16        \n\t"
-        "st          x-,          r15        \n\t"
-        "st          x-,          r14        \n\t"
-        "st          x-,          r13        \n\t"
-        "st          x-,          r12        \n\t"
-        "st          x-,          r11        \n\t"
-        "st          x-,          r10        \n\t"
-        "st          x-,          r9         \n\t"
-        "st          x,           r8         \n\t"
+        "st          x,           r23        \n\t"
+        "st          -x,          r22        \n\t"
+        "st          -x,          r21        \n\t"
+        "st          -x,          r20        \n\t"
+        "st          -x,          r19        \n\t"
+        "st          -x,          r18        \n\t"
+        "st          -x,          r17        \n\t"
+        "st          -x,          r16        \n\t"
+        "st          -x,          r15        \n\t"
+        "st          -x,          r14        \n\t"
+        "st          -x,          r13        \n\t"
+        "st          -x,          r12        \n\t"
+        "st          -x,          r11        \n\t"
+        "st          -x,          r10        \n\t"
+        "st          -x,          r9         \n\t"
+        "st          -x,          r8         \n\t"
         // --------------------------------------
         "pop         r29        \n\t"
         "pop         r28        \n\t"
@@ -236,7 +246,7 @@ void Decrypt(uint8_t *block, uint8_t *roundKeys)
         "pop         r7         \n\t"
         "pop         r6         \n\t"
     :
-    : [block] "x" (block), [roundKeys] "z" (roundKeys), [SBOX_INV] "" (SBOX_INV));
+    : [block] "x" (block), [roundKeys] "z" (roundKeys), [INV_SBOX] "" (INV_SBOX));
 }
 
 #else
