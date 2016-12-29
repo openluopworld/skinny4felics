@@ -198,6 +198,9 @@ void Encrypt(uint8_t *block, uint8_t *roundKeys)
         //               s0  s1  s2  s3   =   r8  r9  r10 r11
         // Cipher State: s7  s4  s5  s6   =   r15 r12 r13 r14
         //               s10 s11 s8  s9       r18 r19 r16 r17
+        // eor  k4,  k8
+        // eor  k8,  k0
+        // eor  k12, k8
         // first column
         "eor         r15,         r18       \n\t"
         "eor         r18,         r8        \n\t"
@@ -255,7 +258,201 @@ void Encrypt(uint8_t *block, uint8_t *roundKeys)
 #elif defined MSP
 void Encrypt(uint8_t *block, uint8_t *roundKeys)
 {
-    /* Add here the cipher encryption implementation */
+    /* r4-r11  : key state                   */
+    /* r12     : temp use                    */
+    /* r13     : currentRound                */
+    /* r14     : point to block              */
+    /* r15     : point to round keys         */
+    asm volatile(
+        "push        r4         \n\t"
+        "push        r5         \n\t"
+        "push        r6         \n\t"
+        "push        r7         \n\t"
+        // load plaintext
+        "mov         #40,       r13          \n\t"
+        // Inverse ShiftRows
+        // s0  s1  s2  s3               s0  s1  s2  s3
+        // s4  s5  s6  s7               s5  s6  s7  s4
+        // s8  s9  s10 s11  -------->   s10 s11 s8  s9
+        // s12 s13 s14 s15              s15 s12 s13 s14
+        // second line
+        "mov         4(r15),    r4           \n\t" // r4 = s5 s4
+        "mov         6(r15),    r5           \n\t" // r5 = s7 s6
+        "mov.b       r4,        7(r15)       \n\t"
+        "swpb        r4                      \n\t" // r4 = s4 s5
+        "and         #0x00ff,   r4           \n\t" // r4 = 0  s5
+        "mov.b       r4,        4(r15)       \n\t"
+        "mov.b       r5,        5(r15)       \n\t"
+        "swpb        r5                      \n\t" // r5 = s6 s7
+        "and         #0x00ff,   r5           \n\t" // r5 = 0  s7
+        "mov.b       r5,        6(r15)       \n\t"
+        // third line
+        "mov         8(r15),    r4           \n\t"
+        "mov         10(r15),   r5           \n\t"
+        "mov         r4,        10(r15)      \n\t"
+        "mov         r5,        8(r15)       \n\t"
+        // fourth line
+        "mov         12(r15),   r4           \n\t" // r4 = s13 s12
+        "mov         14(r15),   r5           \n\t" // r5 = s15 s14
+        "mov.b       r4,        13(r15)      \n\t"
+        "swpb        r4                      \n\t" // r4 = s12 s13
+        "and         #0x00ff,   r4           \n\t" // r4 = 0   s13
+        "mov.b       r4,        14(r15)      \n\t"
+        "mov.b       r5,        15(r15)      \n\t"
+        "swpb        r5                      \n\t" // r5 = s14 s15
+        "and         #0x00ff,   r5           \n\t" // r5 = 0   s15
+        "mov.b       r5,        12(r15)      \n\t"
+    "enc_loop:                               \n\t"
+        // sub column, rotate shift and and round keys
+        "mov.b       0(r15),    r4           \n\t"
+        "mov.b       SBOX(r4),  r4           \n\t"
+        "xor.b       @r14+,     r4           \n\t"
+        "mov.b       r4,        0(r15)       \n\t"
+        "mov.b       1(r15),    r4           \n\t"
+        "mov.b       SBOX(r4),  r4           \n\t"
+        "xor.b       @r14+,     r4           \n\t"
+        "mov.b       r4,        1(r15)       \n\t"
+        "mov.b       2(r15),    r4           \n\t"
+        "mov.b       SBOX(r4),  r4           \n\t"
+        "xor.b       @r14+,     r4           \n\t"
+        "mov.b       r4,        2(r15)       \n\t"
+        "mov.b       3(r15),    r4           \n\t"
+        "mov.b       SBOX(r4),  r4           \n\t"
+        "xor.b       @r14+,     r4           \n\t"
+        "mov.b       r4,        3(r15)       \n\t"
+        "mov.b       7(r15),    r12          \n\t"
+        "mov.b       6(r15),    r4           \n\t"
+        "mov.b       SBOX(r4),  r4           \n\t"
+        "xor.b       @r14+,     r4           \n\t"
+        "mov.b       r4,        7(r15)       \n\t"
+        "mov.b       5(r15),    r4           \n\t"
+        "mov.b       SBOX(r4),  r4           \n\t"
+        "xor.b       @r14+,     r4           \n\t"
+        "mov.b       r4,        6(r15)       \n\t"
+        "mov.b       4(r15),    r4           \n\t"
+        "mov.b       SBOX(r4),  r4           \n\t"
+        "xor.b       @r14+,     r4           \n\t"
+        "mov.b       r4,        5(r15)       \n\t"
+        "mov.b       SBOX(r12), r4           \n\t"
+        "xor.b       @r14+,     r4           \n\t"
+        "mov.b       r4,        4(r15)       \n\t"
+        "mov.b       8(r15),    r12          \n\t"
+        "mov.b       10(r15),   r4           \n\t"
+        "mov.b       SBOX(r4),  r4           \n\t"
+        "xor.b       0x0002,    r4           \n\t"
+        "mov.b       r4,        8(r15)       \n\t"
+        "mov.b       SBOX(r12), r4           \n\t"
+        "mov.b       r4,        8(r15)       \n\t"
+        "mov.b       9(r15),    r12          \n\t"
+        "mov.b       11(r15),   r4           \n\t"
+        "mov.b       SBOX(r4),  r4           \n\t"
+        "mov.b       r4,        9(r15)       \n\t"
+        "mov.b       SBOX(r12), r4           \n\t"
+        "mov.b       r4,        11(r15)      \n\t"
+        "mov.b       12(r15),   r12          \n\t"
+        "mov.b       13(r15),   r4           \n\t"
+        "mov.b       SBOX(r4),  r4           \n\t"
+        "mov.b       r4,        12(r15)      \n\t"
+        "mov.b       14(r15),   r4           \n\t"
+        "mov.b       SBOX(r4),  r4           \n\t"
+        "mov.b       r4,        13(r15)      \n\t"
+        "mov.b       15(r15),   r4           \n\t"
+        "mov.b       SBOX(r4),  r4           \n\t"
+        "mov.b       r4,        14(r15)      \n\t"
+        "mov.b       SBOX(r12), r4           \n\t"
+        "mov.b       r4,        15(r15)      \n\t"
+        // mix column
+        // eor  k8,  k4
+        // eor  k0,  k8
+        // eor  k8,  k12
+        // first column
+        "mov.b       0(r15),    r4           \n\t"
+        "mov.b       7(r15),    r5           \n\t"
+        "mov.b       10(r15),   r6           \n\t"
+        "mov.b       13(r15),   r7           \n\t"
+        "xor.b       r6,        r5           \n\t"
+        "xor.b       r4,        r6           \n\t"
+        "xor.b       r6,        r7           \n\t"
+        "mov.b       r4,        7(r15)       \n\t"
+        "mov.b       r5,        10(r15)      \n\t"
+        "mov.b       r6,        13(r15)      \n\t"
+        "mov.b       r7,        0(r15)       \n\t"
+        // second column
+        "mov.b       1(r15),    r4           \n\t"
+        "mov.b       4(r15),    r5           \n\t"
+        "mov.b       11(r15),   r6           \n\t"
+        "mov.b       14(r15),   r7           \n\t"
+        "xor.b       r6,        r5           \n\t"
+        "xor.b       r4,        r6           \n\t"
+        "xor.b       r6,        r7           \n\t"
+        "mov.b       r4,        4(r15)       \n\t"
+        "mov.b       r5,        11(r15)      \n\t"
+        "mov.b       r6,        14(r15)      \n\t"
+        "mov.b       r7,        1(r15)       \n\t"
+        // third column
+        "mov.b       2(r15),    r4           \n\t"
+        "mov.b       5(r15),    r5           \n\t"
+        "mov.b       8(r15),    r6           \n\t"
+        "mov.b       15(r15),   r7           \n\t"
+        "xor.b       r6,        r5           \n\t"
+        "xor.b       r4,        r6           \n\t"
+        "xor.b       r6,        r7           \n\t"
+        "mov.b       r4,        5(r15)       \n\t"
+        "mov.b       r5,        8(r15)       \n\t"
+        "mov.b       r6,        15(r15)      \n\t"
+        "mov.b       r7,        2(r15)       \n\t"
+        // fourth column
+        "mov.b       3(r15),    r4           \n\t"
+        "mov.b       6(r15),    r5           \n\t"
+        "mov.b       9(r15),    r6           \n\t"
+        "mov.b       12(r15),   r7           \n\t"
+        "xor.b       r6,        r5           \n\t"
+        "xor.b       r4,        r6           \n\t"
+        "xor.b       r6,        r7           \n\t"
+        "mov.b       r4,        6(r15)       \n\t"
+        "mov.b       r5,        9(r15)       \n\t"
+        "mov.b       r6,        12(r15)      \n\t"
+        "mov.b       r7,        3(r15)       \n\t"
+    "dec             r13                     \n\t"
+    "jne             enc_loop                \n\t"
+        // ShiftRows
+        // s0  s1  s2  s3               s0  s1  s2  s3
+        // s4  s5  s6  s7               s7  s4  s5  s6
+        // s8  s9  s10 s11  -------->   s10 s11 s8  s9
+        // s12 s13 s14 s15              s13 s14 s15 s12
+        // second line
+        "mov         4(r15),    r4           \n\t" // r4 = s5 s4
+        "mov         6(r15),    r5           \n\t" // r5 = s7 s6
+        "mov.b       r4,        5(r15)       \n\t"
+        "swpb        r4                      \n\t" // r4 = s4 s5
+        "and         #0x00ff,   r4           \n\t" // r4 = 0  s5
+        "mov.b       r4,        6(r15)       \n\t"
+        "mov.b       r5,        7(r15)       \n\t"
+        "swpb        r5                      \n\t" // r5 = s6 s7
+        "and         #0x00ff,   r5           \n\t" // r5 = 0  s7
+        "mov.b       r5,        4(r15)      \n\t"
+        // third line
+        "mov         8(r15),    r4           \n\t"
+        "mov         10(r15),   r5           \n\t"
+        "mov         r4,        10(r15)      \n\t"
+        "mov         r5,        8(r15)       \n\t"
+        // fourth line
+        "mov         12(r15),   r4           \n\t" // r4 = s13 s12
+        "mov         14(r15),   r5           \n\t" // r5 = s15 s14
+        "mov.b       r4,        15(r15)      \n\t"
+        "swpb        r4                      \n\t" // r4 = s12 s13
+        "and         #0x00ff,   r4           \n\t" // r4 = 0   s13
+        "mov.b       r4,        12(r15)      \n\t"
+        "mov.b       r5,        13(r15)      \n\t"
+        "swpb        r5                      \n\t" // r5 = s14 s15
+        "and         #0x00ff,   r5           \n\t" // r5 = 0   s15
+        "mov.b       r5,        14(r15)      \n\t"
+        "pop         r7         \n\t"
+        "pop         r6         \n\t"
+        "pop         r5         \n\t"
+        "pop         r4         \n\t"
+    :
+    : [block] "m" (block), [roundKeys] "m" (roundKeys), [SBOX] "" (SBOX));
 }
 
 #else

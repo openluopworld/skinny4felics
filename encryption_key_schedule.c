@@ -263,7 +263,7 @@ void RunEncryptionKeySchedule(uint8_t *key, uint8_t *roundKeys)
         "pop          r5            \n\t"
         "pop          r4            \n\t"    
     :
-    : [key] "" (key), [roundKeys] "" (roundKeys), [RC] "" (RC));
+    : [key] "m" (key), [roundKeys] "m" (roundKeys), [RC] "" (RC));
 }
 
 #else
