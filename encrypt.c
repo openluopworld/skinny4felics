@@ -304,66 +304,64 @@ void Encrypt(uint8_t *block, uint8_t *roundKeys)
         "mov.b       r5,        12(r15)      \n\t"
     "enc_loop:                               \n\t"
         // SubColumn, ShiftRows, AddRoundKeys and AddConstant
-        "mov.b       0(r15),    r4           \n\t" // s0
-        "mov.b       SBOX(r4),  r4           \n\t" // s0 = SBOX[s0]
-        "xor.b       @r14+,     r4           \n\t" // s0 = SBOX[s0]^key^const
+        "mov.b       0(r15),    r4           \n\t" // s0'
+        "mov.b       SBOX(r4),  r4           \n\t" // s0' = SBOX[s0]
+        "xor.b       @r14+,     r4           \n\t" // s0' = SBOX[s0]^rks[0]^rc
         "mov.b       r4,        0(r15)       \n\t"
-        "mov.b       1(r15),    r4           \n\t"
+        "mov.b       1(r15),    r4           \n\t" // s1' = SBOX[s1]^rks[1]
         "mov.b       SBOX(r4),  r4           \n\t"
         "xor.b       @r14+,     r4           \n\t"
         "mov.b       r4,        1(r15)       \n\t"
-        "mov.b       2(r15),    r4           \n\t"
+        "mov.b       2(r15),    r4           \n\t" // s2' = SBOX[s2]^rks[2]
         "mov.b       SBOX(r4),  r4           \n\t"
         "xor.b       @r14+,     r4           \n\t"
         "mov.b       r4,        2(r15)       \n\t"
-        "mov.b       3(r15),    r4           \n\t"
+        "mov.b       3(r15),    r4           \n\t" // s3' = SBOX[s3]^rks[3]
         "mov.b       SBOX(r4),  r4           \n\t"
         "xor.b       @r14+,     r4           \n\t"
         "mov.b       r4,        3(r15)       \n\t"
-
         "mov.b       7(r15),    r12          \n\t"
-        "mov.b       6(r15),    r4           \n\t"
+        "mov.b       6(r15),    r4           \n\t" // s7' = SBOX[s7]^rks[7]
         "mov.b       SBOX(r4),  r4           \n\t"
         "xor.b       3(r14),    r4           \n\t"
         "mov.b       r4,        7(r15)       \n\t"
-        "mov.b       5(r15),    r4           \n\t"
+        "mov.b       5(r15),    r4           \n\t" // s6' = SBOX[s6]^rks[6]
         "mov.b       SBOX(r4),  r4           \n\t"
         "xor.b       2(r14),    r4           \n\t"
         "mov.b       r4,        6(r15)       \n\t"
-        "mov.b       4(r15),    r4           \n\t"
+        "mov.b       4(r15),    r4           \n\t" // s5' = SBOX[s5]^rks[5]
         "mov.b       SBOX(r4),  r4           \n\t"
         "xor.b       1(r14),    r4           \n\t"
         "mov.b       r4,        5(r15)       \n\t"
-        "mov.b       SBOX(r12), r4           \n\t"
+        "mov.b       SBOX(r12), r4           \n\t" // s4' = SBOX[s4]^rks[4]^rc
         "xor.b       0(r14),    r4           \n\t"
         "mov.b       r4,        4(r15)       \n\t"
-        "add         #4,        r14          \n\t" // round keys
+        "add         #4,        r14          \n\t" // next round keys
         "mov.b       8(r15),    r12          \n\t"
-        "mov.b       10(r15),   r4           \n\t"
+        "mov.b       10(r15),   r4           \n\t" // s8' = SBOX[s8]^rc
         "mov.b       SBOX(r4),  r4           \n\t"
         "xor.b       0x0002,    r4           \n\t"
         "mov.b       r4,        8(r15)       \n\t"
-        "mov.b       SBOX(r12), r4           \n\t"
+        "mov.b       SBOX(r12), r4           \n\t" // s10' = SBOX[s10]
         "mov.b       r4,        10(r15)      \n\t"
         "mov.b       9(r15),    r12          \n\t"
-        "mov.b       11(r15),   r4           \n\t"
+        "mov.b       11(r15),   r4           \n\t" // s9' = SBOX[s9]^rc
         "mov.b       SBOX(r4),  r4           \n\t"
         "mov.b       r4,        9(r15)       \n\t"
-        "mov.b       SBOX(r12), r4           \n\t"
+        "mov.b       SBOX(r12), r4           \n\t" // s11' = SBOX[s11]
         "mov.b       r4,        11(r15)      \n\t"
         "mov.b       12(r15),   r12          \n\t"
-        "mov.b       13(r15),   r4           \n\t"
+        "mov.b       13(r15),   r4           \n\t" // s12' = SBOX[s12]
         "mov.b       SBOX(r4),  r4           \n\t"
         "mov.b       r4,        12(r15)      \n\t"
-        "mov.b       14(r15),   r4           \n\t"
+        "mov.b       14(r15),   r4           \n\t" // s13' = SBOX[s13]
         "mov.b       SBOX(r4),  r4           \n\t"
         "mov.b       r4,        13(r15)      \n\t"
-        "mov.b       15(r15),   r4           \n\t"
+        "mov.b       15(r15),   r4           \n\t" // s14' = SBOX[s14]
         "mov.b       SBOX(r4),  r4           \n\t"
         "mov.b       r4,        14(r15)      \n\t"
-        "mov.b       SBOX(r12), r4           \n\t"
-        "mov.b       r4,        15(r15)      \n\t"
-        // mix column
+        "mov.b       SBOX(r12), 15(r15)      \n\t" // s15' = SBOX[s15]
+        // mix  column
         // eor  k8,  k4
         // eor  k0,  k8
         // eor  k8,  k12
