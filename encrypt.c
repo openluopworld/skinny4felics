@@ -303,10 +303,10 @@ void Encrypt(uint8_t *block, uint8_t *roundKeys)
         "and         #0x00ff,   r5           \n\t" // r5 = 0   s15
         "mov.b       r5,        12(r15)      \n\t"
     "enc_loop:                               \n\t"
-        // sub column, rotate shift and and round keys
-        "mov.b       0(r15),    r4           \n\t"
-        "mov.b       SBOX(r4),  r4           \n\t"
-        "xor.b       @r14+,     r4           \n\t"
+        // SubColumn, ShiftRows, AddRoundKeys and AddConstant
+        "mov.b       0(r15),    r4           \n\t" // s0
+        "mov.b       SBOX(r4),  r4           \n\t" // s0 = SBOX[s0]
+        "xor.b       @r14+,     r4           \n\t" // s0 = SBOX[s0]^key^const
         "mov.b       r4,        0(r15)       \n\t"
         "mov.b       1(r15),    r4           \n\t"
         "mov.b       SBOX(r4),  r4           \n\t"
@@ -320,29 +320,31 @@ void Encrypt(uint8_t *block, uint8_t *roundKeys)
         "mov.b       SBOX(r4),  r4           \n\t"
         "xor.b       @r14+,     r4           \n\t"
         "mov.b       r4,        3(r15)       \n\t"
+
         "mov.b       7(r15),    r12          \n\t"
         "mov.b       6(r15),    r4           \n\t"
         "mov.b       SBOX(r4),  r4           \n\t"
-        "xor.b       @r14+,     r4           \n\t"
+        "xor.b       3(r14),    r4           \n\t"
         "mov.b       r4,        7(r15)       \n\t"
         "mov.b       5(r15),    r4           \n\t"
         "mov.b       SBOX(r4),  r4           \n\t"
-        "xor.b       @r14+,     r4           \n\t"
+        "xor.b       2(r14),    r4           \n\t"
         "mov.b       r4,        6(r15)       \n\t"
         "mov.b       4(r15),    r4           \n\t"
         "mov.b       SBOX(r4),  r4           \n\t"
-        "xor.b       @r14+,     r4           \n\t"
+        "xor.b       1(r14),    r4           \n\t"
         "mov.b       r4,        5(r15)       \n\t"
         "mov.b       SBOX(r12), r4           \n\t"
-        "xor.b       @r14+,     r4           \n\t"
+        "xor.b       0(r14),    r4           \n\t"
         "mov.b       r4,        4(r15)       \n\t"
+        "add         #4,        r14          \n\t" // round keys
         "mov.b       8(r15),    r12          \n\t"
         "mov.b       10(r15),   r4           \n\t"
         "mov.b       SBOX(r4),  r4           \n\t"
         "xor.b       0x0002,    r4           \n\t"
         "mov.b       r4,        8(r15)       \n\t"
         "mov.b       SBOX(r12), r4           \n\t"
-        "mov.b       r4,        8(r15)       \n\t"
+        "mov.b       r4,        10(r15)      \n\t"
         "mov.b       9(r15),    r12          \n\t"
         "mov.b       11(r15),   r4           \n\t"
         "mov.b       SBOX(r4),  r4           \n\t"
