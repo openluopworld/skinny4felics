@@ -340,7 +340,7 @@ void Encrypt(uint8_t *block, uint8_t *roundKeys)
         "mov.b       8(r15),    r12          \n\t"
         "mov.b       10(r15),   r4           \n\t" // s8' = SBOX[s8]^rc
         "mov.b       SBOX(r4),  r4           \n\t"
-        "xor.b       0x0002,    r4           \n\t"
+        "xor.b       #0x0002,    r4          \n\t"
         "mov.b       r4,        8(r15)       \n\t"
         "mov.b       SBOX(r12), r4           \n\t" // s10' = SBOX[s10]
         "mov.b       r4,        10(r15)      \n\t"
