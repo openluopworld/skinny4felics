@@ -455,6 +455,36 @@ void Encrypt(uint8_t *block, uint8_t *roundKeys)
     : [block] "m" (block), [roundKeys] "m" (roundKeys), [SBOX] "" (SBOX));
 }
 
+#elif defined ARM
+void Encrypt(uint8_t *block, uint8_t *roundKeys)
+{
+    // r0    : ponits to plaintext
+    // r1    : points to roundKeys
+    // r2-r5 : cipher state
+    // r6-r7 : temp use
+    // r8    : loop control
+    // r9    : points to SBOX
+    asm volatile(
+        "stmdb      sp!,      {r2-r9}          \n\t"
+        "mov        r8,       #40              \n\t"
+        "ldr        r9,       =SBOX            \n\t"
+        "ldmia      r0,       {r2-r5}          \n\t" // load plaintext
+    "enc_loop:                                 \n\t"
+        // SubColumn
+        // r2 (s3  s2  s1  s0)
+        // r3 (s7  s6  s5  s4)
+        // r4 (s11 s10 s9  s8)
+        // r5 (s15 s14 s13 s12)
+        "and        r6,       r2, 0xff         \n\t"
+        "ldrb       r6,       [r9,r6]          \n\t"
+        "bfi        r2,r6,    #0, #8           \n\t"
+    "subs           r8,       r8, #1           \n\t"
+    "bne            enc_loop                   \n\t"
+        "ldmia      sp!,      {r2-r9}          \n\t"
+    :
+    : [block] "r" (block), [roundKeys] "r" (roundKeys), [SBOX] "" (SBOX));
+}
+
 #else
 void Encrypt(uint8_t *block, uint8_t *roundKeys)
 {
