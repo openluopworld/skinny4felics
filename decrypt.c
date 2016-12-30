@@ -255,15 +255,15 @@ void Decrypt(uint8_t *block, uint8_t *roundKeys)
     /* r4-r11  : key state                   */
     /* r12     : temp use                    */
     /* r13     : currentRound                */
-    /* r14     : point to block              */
-    /* r15     : point to round keys         */
+    /* r14     : point to round keys         */
+    /* r15     : point to block              */
     asm volatile(
         "push        r4         \n\t"
         "push        r5         \n\t"
         "push        r6         \n\t"
         "push        r7         \n\t"
         // load ciphertext
-        "mov         #1,           r13     \n\t"
+        "mov         #40,           r13     \n\t"
         "add         #312,          r14     \n\t"
     "dec_loop:                              \n\t"
         // Inverse MixColumn
@@ -324,43 +324,43 @@ void Decrypt(uint8_t *block, uint8_t *roundKeys)
         // s4  s5  s6  s7  |xor s4,  s12|  s8  s9  s10 s11
         // s8  s9  s10 s11 |xor s12, s8 |  s12 s13 s14 s15
         // s12 s13 s14 s15 ------------->  s0  s1  s2  s3
-        "mov.b       0(r15),        r4      \n\t" // s0'
-        "mov.b       INV_SBOX(r4),  r4      \n\t" // s0' = INV_SBOX[s0]
-        "xor.b       @r14+,         r4      \n\t" // s0' = INV_SBOX[s0]^rks[0]^rc
+        "mov.b       0(r15),        r4      \n\t" // s0' = INV_SBOX[s0]^rks[0]^rc
+        "xor.b       @r14+,         r4      \n\t"
+        "mov.b       INV_SBOX(r4),  r4      \n\t" 
         "mov.b       r4,            0(r15)  \n\t"
         "mov.b       1(r15),        r4      \n\t" // s1' = INV_SBOX[s1]^rks[1]
-        "mov.b       INV_SBOX(r4),  r4      \n\t"
         "xor.b       @r14+,         r4      \n\t"
+        "mov.b       INV_SBOX(r4),  r4      \n\t"
         "mov.b       r4,            1(r15)  \n\t"
         "mov.b       2(r15),        r4      \n\t" // s2' = INV_SBOX[s2]^rks[2]
-        "mov.b       INV_SBOX(r4),  r4      \n\t"
         "xor.b       @r14+,         r4      \n\t"
+        "mov.b       INV_SBOX(r4),  r4      \n\t"
         "mov.b       r4,            2(r15)  \n\t"
         "mov.b       3(r15),        r4      \n\t" // s3' = INV_SBOX[s3]^rks[3]
-        "mov.b       INV_SBOX(r4),  r4      \n\t"
         "xor.b       @r14+,         r4      \n\t"
+        "mov.b       INV_SBOX(r4),  r4      \n\t"
         "mov.b       r4,            3(r15)  \n\t"
         "mov.b       4(r15),        r12     \n\t"
         "mov.b       5(r15),        r4      \n\t" // s4' = INV_SBOX[s4]^rks[4]^rc
-        "mov.b       INV_SBOX(r4),  r4      \n\t"
         "xor.b       @r14+,         r4      \n\t"
+        "mov.b       INV_SBOX(r4),  r4      \n\t"
         "mov.b       r4,            4(r15)  \n\t"
         "mov.b       6(r15),        r4      \n\t" // s5' = INV_SBOX[s5]^rks[5]
-        "mov.b       INV_SBOX(r4),  r4      \n\t"
         "xor.b       @r14+,         r4      \n\t"
+        "mov.b       INV_SBOX(r4),  r4      \n\t"
         "mov.b       r4,            5(r15)  \n\t"
         "mov.b       7(r15),        r4      \n\t" // s6' = INV_SBOX[s6]^rks[6]
+        "xor.b       @r14+,         r4      \n\t"
         "mov.b       INV_SBOX(r4),  r4      \n\t"
-        "xor.b       @r14+,         r4      \n\t"
         "mov.b       r4,            6(r15)  \n\t"
-        "mov.b       INV_SBOX(r12), r4      \n\t" // s7' = INV_SBOX[s7]^rks[7]
-        "xor.b       @r14+,         r4      \n\t"
+        "xor.b       @r14+,         r12     \n\t" // s7' = INV_SBOX[s7]^rks[7]
+        "mov.b       INV_SBOX(r12), r4      \n\t"
         "mov.b       r4,            7(r15)  \n\t"
         "sub         #16,           r14     \n\t"
         "mov.b       8(r15),        r12     \n\t"
         "mov.b       10(r15),       r4      \n\t" // s8' = INV_SBOX[s8]^rc
-        "mov.b       INV_SBOX(r4),  r4      \n\t"
         "xor.b       #0x0002,       r4      \n\t"
+        "mov.b       INV_SBOX(r4),  r4      \n\t"
         "mov.b       r4,            8(r15)  \n\t"
         "mov.b       INV_SBOX(r12), r4      \n\t" // s10' = INV_SBOX[s10]
         "mov.b       r4,            10(r15) \n\t"

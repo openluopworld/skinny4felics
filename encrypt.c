@@ -261,8 +261,8 @@ void Encrypt(uint8_t *block, uint8_t *roundKeys)
     /* r4-r11  : key state                   */
     /* r12     : temp use                    */
     /* r13     : currentRound                */
-    /* r14     : point to block              */
-    /* r15     : point to round keys         */
+    /* r14     : point to round keys         */
+    /* r15     : point to block              */
     asm volatile(
         "push        r4         \n\t"
         "push        r5         \n\t"
