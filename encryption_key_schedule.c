@@ -91,7 +91,7 @@ void RunEncryptionKeySchedule(uint8_t *key, uint8_t *roundKeys)
         "ldi          r30,        lo8(RC)   \n\t"
         "ldi          r31,        hi8(RC)   \n\t"
     "key_schedule_start:                    \n\t"
-        // add_round_const
+        // add round const
         "lpm          r24,        z+        \n\t"
         "mov          r25,        r24       \n\t"
         "andi         r25,        0x0f      \n\t"
@@ -101,7 +101,7 @@ void RunEncryptionKeySchedule(uint8_t *key, uint8_t *roundKeys)
         "swap         r24                   \n\t"
         "mov          r6,         r11       \n\t"
         "eor          r6,         r24       \n\t"
-        // store_round_keys
+        // store round keys
         "st           y+,         r5        \n\t"
         "st           y+,         r8        \n\t"
         "st           y+,         r9        \n\t"
@@ -112,10 +112,10 @@ void RunEncryptionKeySchedule(uint8_t *key, uint8_t *roundKeys)
         "st           y+,         r14       \n\t"
         "dec          r23                   \n\t"
     "breq             key_schedule_exit     \n\t"
-        // 0  1  2  3         9  15 8  13
-        // 4  5  6  7         10 14 12 11
-        // 8  9  10 11 -----> 0  1  2  3
-        // 12 13 14 15        4  5  6  7
+        // k0  k1  k2  k3         k9  k15 k8  k13
+        // k4  k5  k6  k7         k10 k14 k12 k11
+        // k8  k9  k10 k11 -----> k0  k1  k2  k3
+        // k12 k13 k14 k15        k4  k5  k6  k7
         "mov          r24,        r7        \n\t"
         "mov          r7,         r16       \n\t"
         "mov          r16,        r8        \n\t"
@@ -276,39 +276,38 @@ void RunEncryptionKeySchedule(uint8_t *key, uint8_t *roundKeys)
     // r8    : loop control
     // r9    : points to RC
     asm volatile(
-        "stmdb      sp!,      {r2-r9}     \n\t"
-        "mov        r8,       #40         \n\t"
-        "ldr        r9,       =RC         \n\t"
-        "ldmia      r0,       {r2-r5}     \n\t" // load master key
-    "key_loop:                            \n\t"
-        "ldrb       r6,       [r9]        \n\t"
-        "adds       r9,       r9, #1      \n\t"
-        "mov        r7,       r6, lsr #4  \n\t"
-        "ands       r6,       r6, #0xf    \n\t"
-        "eors       r6,       r6, r2      \n\t" // k0^rc
-        "eors       r7,       r7, r3      \n\t" // k4^rc
-        "strd       r6,r7,    [r1,#0]     \n\t" // store round keys
-        "adds       r1,       r1, #8      \n\t"
+        "stmdb      sp!,      {r2-r9}         \n\t"
+        "mov        r8,       #40             \n\t"
+        "ldr        r9,       =RC             \n\t"
+        "ldmia      r0,       {r2-r5}         \n\t" // load master key
+    "key_loop:                                \n\t"
+        "ldrb       r6,       [r9]            \n\t"
+        "adds       r9,       r9, #1          \n\t"
+        "eors       r7,       r3, r6, lsr #4  \n\t" // k4^rc
+        "ands       r6,       r6, #0xf        \n\t"
+        "eors       r6,       r6, r2          \n\t" // k0^rc
+        "strd       r6,r7,    [r1,#0]         \n\t" // store round keys
+        "adds       r1,       r1, #8          \n\t"
         // r2 (k3  k2  k1  k0)         k13 k8  k15 k9
         // r3 (k7  k6  k5  k4)         k11 k12 k14 k10
         // r4 (k11 k10 k9  k8) ------> k3  k2  k1  k0
         // r5 (k15 k14 k13 k12)        k7  k6  k5  k4
-        "mov        r6,       r4          \n\t" // r6 = (k11 k10 k9  k8 )
-        "mov        r7,       r5          \n\t" // r7 = (k15 k14 k13 k12)
-        "mov        r4,       r2          \n\t" // r4 = (k3  k2  k1  k0)
-        "mov        r5,       r3          \n\t" // r5 = (k7  k6  k5  k4)
-        "rev        r2,       r7          \n\t" // r2 = (k12 k13 k14 k15)
-        "lsls       r2,       r2, #8      \n\t" // r2 = (k13 k14 k15 --)
-        "bfi        r2,r6,    #16,#8      \n\t" // r2 = (k13 k8  k15 --)
-        "lsrs       r6,       r6, #8      \n\t" // r6 = ( -- k11 k10 k9)
-        "bfi        r2,r6,    #0, #8      \n\t" // r2 = (k13 k8  k15 k9)
-        "rev16      r3,       r6          \n\t" // r3 = (k11 --  k9  k10)
-        "bfi        r3,r7,    #16,#8      \n\t" // r3 = (k11 k12 k9  k10)
-        "lsrs       r7,       r7, #16     \n\t" // r7 = (--  --  k15 k14)
-        "bfi        r3,r7,    #8, #8      \n\t" // r3 = (k11 k12 k14 k10)
-    "subs           r8,       r8, #1      \n\t"
-    "bne            key_loop              \n\t"
-        "ldmia      sp!,      {r2-r9}     \n\t"
+        "mov        r6,       r4              \n\t" // r6 = (k11 k10 k9  k8 )
+        "mov        r7,       r5              \n\t" // r7 = (k15 k14 k13 k12)
+        "mov        r4,       r2              \n\t" // r4 = (k3  k2  k1  k0)
+        "mov        r5,       r3              \n\t" // r5 = (k7  k6  k5  k4)
+        "rev        r2,       r7              \n\t" // r2 = (k12 k13 k14 k15)
+        "lsls       r2,       r2, #8          \n\t" // r2 = (k13 k14 k15 --)
+        "bfi        r2,r6,    #16,#8          \n\t" // r2 = (k13 k8  k15 --)
+        "lsrs       r6,       r6, #8          \n\t" // r6 = ( -- k11 k10 k9)
+        "bfi        r2,r6,    #0, #8          \n\t" // r2 = (k13 k8  k15 k9)
+        "rev16      r3,       r6              \n\t" // r3 = (k11 --  k9  k10)
+        "bfi        r3,r7,    #16,#8          \n\t" // r3 = (k11 k12 k9  k10)
+        "lsrs       r7,       r7, #16         \n\t" // r7 = (--  --  k15 k14)
+        "bfi        r3,r7,    #8, #8          \n\t" // r3 = (k11 k12 k14 k10)
+    "subs           r8,       r8, #1          \n\t"
+    "bne            key_loop                  \n\t"
+        "ldmia      sp!,      {r2-r9}         \n\t"
     :
     : [key] "r" (key), [roundKeys] "r" (roundKeys), [RC] "" (RC));
 }
