@@ -45,8 +45,9 @@ void RunEncryptionKeySchedule(uint8_t *key, uint8_t *roundKeys)
     /* r7-r22  : master keys                */
     /* r23     : loop control               */
     /* r24-r25 : temp use                   */
-    /* r26-r27 : X points to plain text     */
-    /* r30-r31 : Z points to roundKeys      */
+    /* r26-r27 : X points to master keys    */
+    /* r28-r29 : Y points to roundKeys      */
+    /* r30-r31 : Z points to RC             */
     /* -------------------------------------*/
     asm volatile(
         "push         r5         \n\t"
@@ -110,12 +111,13 @@ void RunEncryptionKeySchedule(uint8_t *key, uint8_t *roundKeys)
         "st           y+,         r12       \n\t"
         "st           y+,         r13       \n\t"
         "st           y+,         r14       \n\t"
-        "dec          r23                   \n\t"
+    "dec              r23                   \n\t"
     "breq             key_schedule_exit     \n\t"
         // k0  k1  k2  k3         k9  k15 k8  k13
         // k4  k5  k6  k7         k10 k14 k12 k11
         // k8  k9  k10 k11 -----> k0  k1  k2  k3
         // k12 k13 k14 k15        k4  k5  k6  k7
+        // some instructions can be deleted with the use of movw
         "mov          r24,        r7        \n\t"
         "mov          r7,         r16       \n\t"
         "mov          r16,        r8        \n\t"
