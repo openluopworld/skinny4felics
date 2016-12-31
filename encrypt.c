@@ -529,7 +529,12 @@ void Encrypt(uint8_t *block, uint8_t *roundKeys)
         "mov        r6,       r5, lsr #24      \n\t"
         "ldrb       r6,       [r9,r6]          \n\t"
         "bfi        r5,r6,    #24, #8          \n\t"
-
+        // AddRoundKey and AddRoundConst
+        "ldrd       r6,r7,    [r1,#0]          \n\t"
+        "adds       r1,       r1, #8           \n\t"
+        "eors       r2,       r2, r6           \n\t"
+        "eors       r3,       r3, r7           \n\t"
+        "eors       r4,       r4, #0x02        \n\t"
     "subs           r8,       r8, #1           \n\t"
     "bne            enc_loop                   \n\t"
         "ldmia      sp!,      {r2-r11}         \n\t"
