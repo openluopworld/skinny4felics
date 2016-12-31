@@ -466,7 +466,7 @@ void Encrypt(uint8_t *block, uint8_t *roundKeys)
     // r9    : points to SBOX
     // r10   : 0xff
     asm volatile(
-        "stmdb      sp!,      {r2-r11}         \n\t"
+        "stmdb      sp!,      {r2-r10}         \n\t"
         "mov        r8,       #40              \n\t"
         "ldr        r9,       =SBOX            \n\t"
         "mov        r10,      #0xff            \n\t"
@@ -552,7 +552,7 @@ void Encrypt(uint8_t *block, uint8_t *roundKeys)
         "mov        r3,       r6               \n\t"
     "subs           r8,       r8, #1           \n\t"
     "bne            enc_loop                   \n\t"
-        "ldmia      sp!,      {r2-r11}         \n\t"
+        "ldmia      sp!,      {r2-r10}         \n\t"
     :
     : [block] "r" (block), [roundKeys] "r" (roundKeys), [SBOX] "" (SBOX));
 }
