@@ -464,10 +464,12 @@ void Encrypt(uint8_t *block, uint8_t *roundKeys)
     // r6-r7 : temp use
     // r8    : loop control
     // r9    : points to SBOX
+    // r10   : 0xff
     asm volatile(
-        "stmdb      sp!,      {r2-r9}          \n\t"
+        "stmdb      sp!,      {r2-r11}         \n\t"
         "mov        r8,       #40              \n\t"
         "ldr        r9,       =SBOX            \n\t"
+        "mov        r10,      #0xff            \n\t"
         "ldmia      r0,       {r2-r5}          \n\t" // load plaintext
     "enc_loop:                                 \n\t"
         // SubColumn
@@ -475,12 +477,62 @@ void Encrypt(uint8_t *block, uint8_t *roundKeys)
         // r3 (s7  s6  s5  s4)
         // r4 (s11 s10 s9  s8)
         // r5 (s15 s14 s13 s12)
-        "and        r6,       r2, 0xff         \n\t"
+        // first line
+        "and        r6,       r2, #0xff        \n\t"
         "ldrb       r6,       [r9,r6]          \n\t"
         "bfi        r2,r6,    #0, #8           \n\t"
+        "and        r6,       r10, r2, lsr #8  \n\t"
+        "ldrb       r6,       [r9,r6]          \n\t"
+        "bfi        r2,r6,    #8, #8           \n\t"
+        "and        r6,       r10, r2, lsr #16 \n\t"
+        "ldrb       r6,       [r9,r6]          \n\t"
+        "bfi        r2,r6,    #16, #8          \n\t"
+        "mov        r6,       r2, lsr #24      \n\t"
+        "ldrb       r6,       [r9,r6]          \n\t"
+        "bfi        r2,r6,    #24, #8          \n\t"
+        // second line
+        "and        r6,       r3, #0xff        \n\t"
+        "ldrb       r6,       [r9,r6]          \n\t"
+        "bfi        r3,r6,    #0, #8           \n\t"
+        "and        r6,       r10, r3, lsr #8  \n\t"
+        "ldrb       r6,       [r9,r6]          \n\t"
+        "bfi        r3,r6,    #8, #8           \n\t"
+        "and        r6,       r10, r3, lsr #16 \n\t"
+        "ldrb       r6,       [r9,r6]          \n\t"
+        "bfi        r3,r6,    #16, #8          \n\t"
+        "mov        r6,       r3, lsr #24      \n\t"
+        "ldrb       r6,       [r9,r6]          \n\t"
+        "bfi        r3,r6,    #24, #8          \n\t"
+        // first line
+        "and        r6,       r4, #0xff        \n\t"
+        "ldrb       r6,       [r9,r6]          \n\t"
+        "bfi        r4,r6,    #0, #8           \n\t"
+        "and        r6,       r10, r4, lsr #8  \n\t"
+        "ldrb       r6,       [r9,r6]          \n\t"
+        "bfi        r4,r6,    #8, #8           \n\t"
+        "and        r6,       r10, r4, lsr #16 \n\t"
+        "ldrb       r6,       [r9,r6]          \n\t"
+        "bfi        r4,r6,    #16, #8          \n\t"
+        "mov        r6,       r4, lsr #24      \n\t"
+        "ldrb       r6,       [r9,r6]          \n\t"
+        "bfi        r4,r6,    #24, #8          \n\t"
+        // first line
+        "and        r6,       r5, #0xff        \n\t"
+        "ldrb       r6,       [r9,r6]          \n\t"
+        "bfi        r5,r6,    #0, #8           \n\t"
+        "and        r6,       r10, r5, lsr #8  \n\t"
+        "ldrb       r6,       [r9,r6]          \n\t"
+        "bfi        r5,r6,    #8, #8           \n\t"
+        "and        r6,       r10, r5, lsr #16 \n\t"
+        "ldrb       r6,       [r9,r6]          \n\t"
+        "bfi        r5,r6,    #16, #8          \n\t"
+        "mov        r6,       r5, lsr #24      \n\t"
+        "ldrb       r6,       [r9,r6]          \n\t"
+        "bfi        r5,r6,    #24, #8          \n\t"
+
     "subs           r8,       r8, #1           \n\t"
     "bne            enc_loop                   \n\t"
-        "ldmia      sp!,      {r2-r9}          \n\t"
+        "ldmia      sp!,      {r2-r11}         \n\t"
     :
     : [block] "r" (block), [roundKeys] "r" (roundKeys), [SBOX] "" (SBOX));
 }
