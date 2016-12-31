@@ -391,6 +391,110 @@ void Decrypt(uint8_t *block, uint8_t *roundKeys)
     : [block] "m" (block), [roundKeys] "m" (roundKeys), [INV_SBOX] "" (INV_SBOX));
 }
 
+#elif defined ARM
+void Decrypt(uint8_t *block, uint8_t *roundKeys) {
+
+    // r0    : ponits to ciphertext
+    // r1    : points to roundKeys
+    // r2-r5 : cipher state
+    // r6-r7 : temp use
+    // r8    : loop control
+    // r9    : points to INV_SBOX
+    // r10   : 0xff
+    asm volatile(
+        "stmdb      sp!,      {r2-r10}         \n\t"
+        "mov        r8,       #40              \n\t"
+        "ldr        r9,       =INV_SBOX        \n\t"
+        "mov        r10,      #0xff            \n\t"
+        "ldmia      r0,       {r2-r5}          \n\t" // load plaintext
+        "adds       r1,       r1, #312         \n\t" // points to last round
+    "enc_loop:                                 \n\t"
+        // Inverse MixColumn
+        // eor  s0,  s12
+        // eor  s12, s4
+        // eor  s8,  s12
+        "eors       r2,       r2, r5           \n\t"
+        "eors       r5,       r5, r3           \n\t"
+        "eors       r4,       r4, r5           \n\t"
+        "mov        r6,       r2               \n\t"
+        "mov        r2,       r3               \n\t"
+        "mov        r3,       r4               \n\t"
+        "mov        r4,       r5               \n\t"
+        "mov        r5,       r6               \n\t"
+        // Inverse ShiftRow
+        "rors       r3,       r3, #24          \n\t"
+        "rors       r4,       r4, #16          \n\t"
+        "rors       r5,       r5, #8           \n\t"
+        // Inverse AddRoundKey and Inverse AddRoundConst
+        "ldrd       r6,r7,    [r1,#0]          \n\t"
+        "subs       r1,       r1, #8           \n\t"
+        "eors       r2,       r2, r6           \n\t"
+        "eors       r3,       r3, r7           \n\t"
+        "eors       r4,       r4, #0x02        \n\t"
+        // Inverse SubColumn
+        // r2 (s3  s2  s1  s0)
+        // r3 (s7  s6  s5  s4)
+        // r4 (s11 s10 s9  s8)
+        // r5 (s15 s14 s13 s12)
+        // first line
+        "and        r6,       r2, #0xff        \n\t"
+        "ldrb       r6,       [r9,r6]          \n\t"
+        "bfi        r2,r6,    #0, #8           \n\t"
+        "and        r6,       r10, r2, lsr #8  \n\t"
+        "ldrb       r6,       [r9,r6]          \n\t"
+        "bfi        r2,r6,    #8, #8           \n\t"
+        "and        r6,       r10, r2, lsr #16 \n\t"
+        "ldrb       r6,       [r9,r6]          \n\t"
+        "bfi        r2,r6,    #16, #8          \n\t"
+        "mov        r6,       r2, lsr #24      \n\t"
+        "ldrb       r6,       [r9,r6]          \n\t"
+        "bfi        r2,r6,    #24, #8          \n\t"
+        // second line
+        "and        r6,       r3, #0xff        \n\t"
+        "ldrb       r6,       [r9,r6]          \n\t"
+        "bfi        r3,r6,    #0, #8           \n\t"
+        "and        r6,       r10, r3, lsr #8  \n\t"
+        "ldrb       r6,       [r9,r6]          \n\t"
+        "bfi        r3,r6,    #8, #8           \n\t"
+        "and        r6,       r10, r3, lsr #16 \n\t"
+        "ldrb       r6,       [r9,r6]          \n\t"
+        "bfi        r3,r6,    #16, #8          \n\t"
+        "mov        r6,       r3, lsr #24      \n\t"
+        "ldrb       r6,       [r9,r6]          \n\t"
+        "bfi        r3,r6,    #24, #8          \n\t"
+        // first line
+        "and        r6,       r4, #0xff        \n\t"
+        "ldrb       r6,       [r9,r6]          \n\t"
+        "bfi        r4,r6,    #0, #8           \n\t"
+        "and        r6,       r10, r4, lsr #8  \n\t"
+        "ldrb       r6,       [r9,r6]          \n\t"
+        "bfi        r4,r6,    #8, #8           \n\t"
+        "and        r6,       r10, r4, lsr #16 \n\t"
+        "ldrb       r6,       [r9,r6]          \n\t"
+        "bfi        r4,r6,    #16, #8          \n\t"
+        "mov        r6,       r4, lsr #24      \n\t"
+        "ldrb       r6,       [r9,r6]          \n\t"
+        "bfi        r4,r6,    #24, #8          \n\t"
+        // first line
+        "and        r6,       r5, #0xff        \n\t"
+        "ldrb       r6,       [r9,r6]          \n\t"
+        "bfi        r5,r6,    #0, #8           \n\t"
+        "and        r6,       r10, r5, lsr #8  \n\t"
+        "ldrb       r6,       [r9,r6]          \n\t"
+        "bfi        r5,r6,    #8, #8           \n\t"
+        "and        r6,       r10, r5, lsr #16 \n\t"
+        "ldrb       r6,       [r9,r6]          \n\t"
+        "bfi        r5,r6,    #16, #8          \n\t"
+        "mov        r6,       r5, lsr #24      \n\t"
+        "ldrb       r6,       [r9,r6]          \n\t"
+        "bfi        r5,r6,    #24, #8          \n\t"
+    "subs           r8,       r8, #1           \n\t"
+    "bne            enc_loop                   \n\t"
+        "ldmia      sp!,      {r2-r10}         \n\t"
+    :
+    : [block] "r" (block), [roundKeys] "r" (roundKeys), [INV_SBOX] "" (INV_SBOX));
+}
+
 #else
 void Decrypt(uint8_t *block, uint8_t *roundKeys)
 {
