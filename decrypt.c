@@ -188,7 +188,7 @@ void Decrypt(uint8_t *block, uint8_t *roundKeys)
         "ld          r19,         y          \n\t"
         "mov         r28,         r6         \n\t"
         "ld          r21,         y          \n\t"
-        // second pa  rt
+        // second part
         "mov         r28,         r13        \n\t"
         "ld          r9,          y          \n\t"
         "mov         r28,         r18        \n\t"

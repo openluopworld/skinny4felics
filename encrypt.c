@@ -213,7 +213,7 @@ void Encrypt(uint8_t *block, uint8_t *roundKeys)
         "eor         r13,         r16       \n\t"
         "eor         r16,         r10       \n\t"
         "eor         r23,         r16       \n\t"
-        // ourth column
+        // fourth column
         "eor         r14,         r17       \n\t"
         "eor         r17,         r11       \n\t"
         "eor         r20,         r17       \n\t"
@@ -304,9 +304,9 @@ void Encrypt(uint8_t *block, uint8_t *roundKeys)
         "mov.b       r5,        12(r15)      \n\t"
     "enc_loop:                               \n\t"
         // SubColumn, ShiftRows, AddRoundKeys and AddConstant
-        "mov.b       0(r15),    r4           \n\t" // s0'
-        "mov.b       SBOX(r4),  r4           \n\t" // s0' = SBOX[s0]
-        "xor.b       @r14+,     r4           \n\t" // s0' = SBOX[s0]^rks[0]^rc
+        "mov.b       0(r15),    r4           \n\t" // s0' = SBOX[s0]^rks[0]^rc
+        "mov.b       SBOX(r4),  r4           \n\t"
+        "xor.b       @r14+,     r4           \n\t"
         "mov.b       r4,        0(r15)       \n\t"
         "mov.b       1(r15),    r4           \n\t" // s1' = SBOX[s1]^rks[1]
         "mov.b       SBOX(r4),  r4           \n\t"
