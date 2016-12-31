@@ -326,60 +326,45 @@ void Decrypt(uint8_t *block, uint8_t *roundKeys)
         // s12 s13 s14 s15 ------------->  s0  s1  s2  s3
         "mov.b       0(r15),        r4      \n\t" // s0' = INV_SBOX[s0]^rks[0]^rc
         "xor.b       @r14+,         r4      \n\t"
-        "mov.b       INV_SBOX(r4),  r4      \n\t" 
-        "mov.b       r4,            0(r15)  \n\t"
+        "mov.b       INV_SBOX(r4),  0(r15)  \n\t" 
         "mov.b       1(r15),        r4      \n\t" // s1' = INV_SBOX[s1]^rks[1]
         "xor.b       @r14+,         r4      \n\t"
-        "mov.b       INV_SBOX(r4),  r4      \n\t"
-        "mov.b       r4,            1(r15)  \n\t"
+        "mov.b       INV_SBOX(r4),  1(r15)  \n\t"
         "mov.b       2(r15),        r4      \n\t" // s2' = INV_SBOX[s2]^rks[2]
         "xor.b       @r14+,         r4      \n\t"
-        "mov.b       INV_SBOX(r4),  r4      \n\t"
-        "mov.b       r4,            2(r15)  \n\t"
+        "mov.b       INV_SBOX(r4),  2(r15)  \n\t"
         "mov.b       3(r15),        r4      \n\t" // s3' = INV_SBOX[s3]^rks[3]
         "xor.b       @r14+,         r4      \n\t"
-        "mov.b       INV_SBOX(r4),  r4      \n\t"
-        "mov.b       r4,            3(r15)  \n\t"
+        "mov.b       INV_SBOX(r4),  3(r15)  \n\t"
         "mov.b       4(r15),        r12     \n\t"
         "mov.b       5(r15),        r4      \n\t" // s4' = INV_SBOX[s4]^rks[4]^rc
         "xor.b       @r14+,         r4      \n\t"
-        "mov.b       INV_SBOX(r4),  r4      \n\t"
-        "mov.b       r4,            4(r15)  \n\t"
+        "mov.b       INV_SBOX(r4),  4(r15)  \n\t"
         "mov.b       6(r15),        r4      \n\t" // s5' = INV_SBOX[s5]^rks[5]
         "xor.b       @r14+,         r4      \n\t"
-        "mov.b       INV_SBOX(r4),  r4      \n\t"
-        "mov.b       r4,            5(r15)  \n\t"
+        "mov.b       INV_SBOX(r4),  5(r15)  \n\t"
         "mov.b       7(r15),        r4      \n\t" // s6' = INV_SBOX[s6]^rks[6]
         "xor.b       @r14+,         r4      \n\t"
-        "mov.b       INV_SBOX(r4),  r4      \n\t"
-        "mov.b       r4,            6(r15)  \n\t"
+        "mov.b       INV_SBOX(r4),  6(r15)  \n\t"
         "xor.b       @r14+,         r12     \n\t" // s7' = INV_SBOX[s7]^rks[7]
-        "mov.b       INV_SBOX(r12), r4      \n\t"
-        "mov.b       r4,            7(r15)  \n\t"
+        "mov.b       INV_SBOX(r12), 7(r15)  \n\t"
         "sub         #16,           r14     \n\t"
         "mov.b       8(r15),        r12     \n\t"
         "mov.b       10(r15),       r4      \n\t" // s8' = INV_SBOX[s8]^rc
         "xor.b       #0x0002,       r4      \n\t"
-        "mov.b       INV_SBOX(r4),  r4      \n\t"
-        "mov.b       r4,            8(r15)  \n\t"
-        "mov.b       INV_SBOX(r12), r4      \n\t" // s10' = INV_SBOX[s10]
-        "mov.b       r4,            10(r15) \n\t"
+        "mov.b       INV_SBOX(r4),  8(r15)  \n\t"
+        "mov.b       INV_SBOX(r12), 10(r15) \n\t" // s10' = INV_SBOX[s10]
         "mov.b       9(r15),        r12     \n\t"
         "mov.b       11(r15),       r4      \n\t" // s9' = INV_SBOX[s9]
-        "mov.b       INV_SBOX(r4),  r4      \n\t"
-        "mov.b       r4,            9(r15)  \n\t"
-        "mov.b       INV_SBOX(r12), r4      \n\t" // s11' = INV_SBOX[s11]
-        "mov.b       r4,            11(r15) \n\t"
+        "mov.b       INV_SBOX(r4),  9(r15)  \n\t"
+        "mov.b       INV_SBOX(r12), 11(r15) \n\t" // s11' = INV_SBOX[s11]
         "mov.b       15(r15),       r12     \n\t"
         "mov.b       14(r15),       r4      \n\t" // s12' = INV_SBOX[s12]
-        "mov.b       INV_SBOX(r4),  r4      \n\t"
-        "mov.b       r4,            15(r15) \n\t"
+        "mov.b       INV_SBOX(r4),  15(r15) \n\t"
         "mov.b       13(r15),       r4      \n\t" // s13' = INV_SBOX[s13]
-        "mov.b       INV_SBOX(r4),  r4      \n\t"
-        "mov.b       r4,            14(r15) \n\t"
+        "mov.b       INV_SBOX(r4),  14(r15) \n\t"
         "mov.b       12(r15),       r4      \n\t" // s14' = INV_SBOX[s14]
-        "mov.b       INV_SBOX(r4),  r4      \n\t"
-        "mov.b       r4,            13(r15) \n\t"
+        "mov.b       INV_SBOX(r4),  13(r15) \n\t"
         "mov.b       INV_SBOX(r12), 12(r15) \n\t" // s15' = INV_SBOX[s15]
     "dec             r13                    \n\t"
     "jne             dec_loop               \n\t"
