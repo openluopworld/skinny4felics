@@ -535,10 +535,14 @@ void Encrypt(uint8_t *block, uint8_t *roundKeys)
         "eors       r2,       r2, r6           \n\t"
         "eors       r3,       r3, r7           \n\t"
         "eors       r4,       r4, #0x02        \n\t"
-        // ShiftRow and MixColumn
+        // ShiftRow
+        // The data is in little endian, so ShiftRow is inverse.
+        // For example, r3 = (s7 s6 s5 s4). It needs rotate shift
+        // left (not right) 8 bits to to get r3 = (s6 s5 s4 s7).
         "rors       r3,       r3, #24          \n\t"
         "rors       r4,       r4, #16          \n\t"
         "rors       r5,       r5, #8           \n\t"
+        // MixColumn
         // eor  k4,  k8
         // eor  k8,  k0
         // eor  k12, k8
