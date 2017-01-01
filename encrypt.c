@@ -280,11 +280,9 @@ void Encrypt(uint8_t *block, uint8_t *roundKeys)
         "mov         6(r15),    r5           \n\t" // r5 = s7 s6
         "mov.b       r4,        7(r15)       \n\t"
         "swpb        r4                      \n\t" // r4 = s4 s5
-        "and         #0x00ff,   r4           \n\t" // r4 = 0  s5
         "mov.b       r4,        4(r15)       \n\t"
         "mov.b       r5,        5(r15)       \n\t"
         "swpb        r5                      \n\t" // r5 = s6 s7
-        "and         #0x00ff,   r5           \n\t" // r5 = 0  s7
         "mov.b       r5,        6(r15)       \n\t"
         // third line
         "mov         8(r15),    r4           \n\t"
@@ -296,11 +294,9 @@ void Encrypt(uint8_t *block, uint8_t *roundKeys)
         "mov         14(r15),   r5           \n\t" // r5 = s15 s14
         "mov.b       r4,        13(r15)      \n\t"
         "swpb        r4                      \n\t" // r4 = s12 s13
-        "and         #0x00ff,   r4           \n\t" // r4 = 0   s13
         "mov.b       r4,        14(r15)      \n\t"
         "mov.b       r5,        15(r15)      \n\t"
         "swpb        r5                      \n\t" // r5 = s14 s15
-        "and         #0x00ff,   r5           \n\t" // r5 = 0   s15
         "mov.b       r5,        12(r15)      \n\t"
     "enc_loop:                               \n\t"
         // SubColumn, ShiftRows, AddRoundKeys and AddConstant
@@ -425,11 +421,9 @@ void Encrypt(uint8_t *block, uint8_t *roundKeys)
         "mov         6(r15),    r5           \n\t" // r5 = s7 s6
         "mov.b       r4,        5(r15)       \n\t"
         "swpb        r4                      \n\t" // r4 = s4 s5
-        "and         #0x00ff,   r4           \n\t" // r4 = 0  s5
         "mov.b       r4,        6(r15)       \n\t"
         "mov.b       r5,        7(r15)       \n\t"
         "swpb        r5                      \n\t" // r5 = s6 s7
-        "and         #0x00ff,   r5           \n\t" // r5 = 0  s7
         "mov.b       r5,        4(r15)      \n\t"
         // third line
         "mov         8(r15),    r4           \n\t"
@@ -441,11 +435,9 @@ void Encrypt(uint8_t *block, uint8_t *roundKeys)
         "mov         14(r15),   r5           \n\t" // r5 = s15 s14
         "mov.b       r4,        15(r15)      \n\t"
         "swpb        r4                      \n\t" // r4 = s12 s13
-        "and         #0x00ff,   r4           \n\t" // r4 = 0   s13
         "mov.b       r4,        12(r15)      \n\t"
         "mov.b       r5,        13(r15)      \n\t"
         "swpb        r5                      \n\t" // r5 = s14 s15
-        "and         #0x00ff,   r5           \n\t" // r5 = 0   s15
         "mov.b       r5,        14(r15)      \n\t"
         "pop         r7         \n\t"
         "pop         r6         \n\t"

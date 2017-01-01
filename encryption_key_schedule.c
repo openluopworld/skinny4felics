@@ -41,6 +41,8 @@
 void RunEncryptionKeySchedule(uint8_t *key, uint8_t *roundKeys)
 {
     /*--------------------------------------*/
+    // Round keys and round constants are eor-ed
+    // and stored together
     /* r5-r6   : tk0, tk4                   */
     /* r7-r22  : master keys                */
     /* r23     : loop control               */
