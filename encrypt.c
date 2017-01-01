@@ -536,9 +536,9 @@ void Encrypt(uint8_t *block, uint8_t *roundKeys)
         "eors       r3,       r3, r7           \n\t"
         "eors       r4,       r4, #0x02        \n\t"
         // ShiftRow and MixColumn
-        "rors       r3,       r3, #8           \n\t"
+        "rors       r3,       r3, #24          \n\t"
         "rors       r4,       r4, #16          \n\t"
-        "rors       r5,       r5, #24          \n\t"
+        "rors       r5,       r5, #8           \n\t"
         // eor  k4,  k8
         // eor  k8,  k0
         // eor  k12, k8
@@ -552,6 +552,7 @@ void Encrypt(uint8_t *block, uint8_t *roundKeys)
         "mov        r3,       r6               \n\t"
     "subs           r8,       r8, #1           \n\t"
     "bne            enc_loop                   \n\t"
+        "stmia      r0,       {r2-r5}          \n\t" // store ciphertext
         "ldmia      sp!,      {r2-r10}         \n\t"
     :
     : [block] "r" (block), [roundKeys] "r" (roundKeys), [SBOX] "" (SBOX));

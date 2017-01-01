@@ -391,7 +391,7 @@ void Decrypt(uint8_t *block, uint8_t *roundKeys) {
         "mov        r8,       #40              \n\t"
         "ldr        r9,       =INV_SBOX        \n\t"
         "mov        r10,      #0xff            \n\t"
-        "ldmia      r0,       {r2-r5}          \n\t" // load plaintext
+        "ldmia      r0,       {r2-r5}          \n\t" // load ciphertext
         "adds       r1,       r1, #312         \n\t" // points to last round
     "enc_loop:                                 \n\t"
         // Inverse MixColumn
@@ -407,9 +407,9 @@ void Decrypt(uint8_t *block, uint8_t *roundKeys) {
         "mov        r4,       r5               \n\t"
         "mov        r5,       r6               \n\t"
         // Inverse ShiftRow
-        "rors       r3,       r3, #24          \n\t"
+        "rors       r3,       r3, #8           \n\t"
         "rors       r4,       r4, #16          \n\t"
-        "rors       r5,       r5, #8           \n\t"
+        "rors       r5,       r5, #24          \n\t"
         // Inverse AddRoundKey and Inverse AddRoundConst
         "ldrd       r6,r7,    [r1,#0]          \n\t"
         "subs       r1,       r1, #8           \n\t"
@@ -475,6 +475,7 @@ void Decrypt(uint8_t *block, uint8_t *roundKeys) {
         "bfi        r5,r6,    #24, #8          \n\t"
     "subs           r8,       r8, #1           \n\t"
     "bne            enc_loop                   \n\t"
+        "stmia      r0,       {r2-r5}          \n\t" // store plaintext
         "ldmia      sp!,      {r2-r10}         \n\t"
     :
     : [block] "r" (block), [roundKeys] "r" (roundKeys), [INV_SBOX] "" (INV_SBOX));
