@@ -252,7 +252,7 @@ void Decrypt(uint8_t *block, uint8_t *roundKeys)
 #elif defined MSP
 void Decrypt(uint8_t *block, uint8_t *roundKeys)
 {
-    /* r4-r11  : key state                   */
+    /* r4-r11  : cipher state                */
     /* r12     : temp use                    */
     /* r13     : currentRound                */
     /* r14     : point to round keys         */
@@ -262,6 +262,10 @@ void Decrypt(uint8_t *block, uint8_t *roundKeys)
         "push        r5         \n\t"
         "push        r6         \n\t"
         "push        r7         \n\t"
+        "push        r8         \n\t"
+        "push        r9         \n\t"
+        "push        r10        \n\t"
+        "push        r11        \n\t"
         // load ciphertext
         "mov         #40,           r13     \n\t"
         "add         #312,          r14     \n\t"
@@ -271,59 +275,30 @@ void Decrypt(uint8_t *block, uint8_t *roundKeys)
         // s4  s5  s6  s7  |xor s4,  s12|  s8  s9  s10 s11
         // s8  s9  s10 s11 |xor s12, s8 |  s12 s13 s14 s15
         // s12 s13 s14 s15 ------------->  s0  s1  s2  s3
-        // first column
-        "mov.b       0(r15),        r4      \n\t"
-        "mov.b       4(r15),        r5      \n\t"
-        "mov.b       8(r15),        r6      \n\t"
-        "mov.b       12(r15),       r7      \n\t"
-        "xor.b       r7,            r4      \n\t"
-        "xor.b       r5,            r7      \n\t"
-        "xor.b       r7,            r6      \n\t"
-        "mov.b       r4,            12(r15) \n\t"
-        "mov.b       r5,            0(r15)  \n\t"
-        "mov.b       r6,            4(r15)  \n\t"
-        "mov.b       r7,            8(r15)  \n\t"
-        // second column
-        "mov.b       1(r15),        r4      \n\t"
-        "mov.b       5(r15),        r5      \n\t"
-        "mov.b       9(r15),        r6      \n\t"
-        "mov.b       13(r15),       r7      \n\t"
-        "xor.b       r7,            r4      \n\t"
-        "xor.b       r5,            r7      \n\t"
-        "xor.b       r7,            r6      \n\t"
-        "mov.b       r4,            13(r15) \n\t"
-        "mov.b       r5,            1(r15)  \n\t"
-        "mov.b       r6,            5(r15)  \n\t"
-        "mov.b       r7,            9(r15)  \n\t"
-        // third column
-        "mov.b       2(r15),        r4      \n\t"
-        "mov.b       6(r15),        r5      \n\t"
-        "mov.b       10(r15),       r6      \n\t"
-        "mov.b       14(r15),       r7      \n\t"
-        "xor.b       r7,            r4      \n\t"
-        "xor.b       r5,            r7      \n\t"
-        "xor.b       r7,            r6      \n\t"
-        "mov.b       r4,            14(r15) \n\t"
-        "mov.b       r5,            2(r15)  \n\t"
-        "mov.b       r6,            6(r15)  \n\t"
-        "mov.b       r7,            10(r15) \n\t"
-        // fourth column
-        "mov.b       3(r15),        r4      \n\t"
-        "mov.b       7(r15),        r5      \n\t"
-        "mov.b       11(r15),       r6      \n\t"
-        "mov.b       15(r15),       r7      \n\t"
-        "xor.b       r7,            r4      \n\t"
-        "xor.b       r5,            r7      \n\t"
-        "xor.b       r7,            r6      \n\t"
-        "mov.b       r4,            15(r15) \n\t"
-        "mov.b       r5,            3(r15)  \n\t"
-        "mov.b       r6,            7(r15)  \n\t"
-        "mov.b       r7,            11(r15) \n\t"
-        // Inverse ShiftRows, AddRoundKeys, AddConstant, Inverse SubColumn
-        // s0  s1  s2  s3  |xor s12, s0 |  s4  s5  s6  s7
-        // s4  s5  s6  s7  |xor s4,  s12|  s8  s9  s10 s11
-        // s8  s9  s10 s11 |xor s12, s8 |  s12 s13 s14 s15
-        // s12 s13 s14 s15 ------------->  s0  s1  s2  s3
+        "mov         0(r15),        r4      \n\t"
+        "mov         2(r15),        r5      \n\t"
+        "mov         4(r15),        r6      \n\t"
+        "mov         6(r15),        r7      \n\t"
+        "mov         8(r15),        r8      \n\t"
+        "mov         10(r15),       r9      \n\t"
+        "mov         12(r15),       r10     \n\t"
+        "mov         14(r15),       r11     \n\t"
+        "xor         r10,           r4      \n\t"
+        "xor         r6,            r10     \n\t"
+        "xor         r10,           r8      \n\t"
+        "xor         r11,           r5      \n\t"
+        "xor         r7,            r11     \n\t"
+        "xor         r11,           r9      \n\t"
+        "mov         r6,            0(r15)  \n\t"
+        "mov         r7,            2(r15)  \n\t"
+        "mov         r8,            4(r15)  \n\t"
+        "mov         r9,            6(r15)  \n\t"
+        "mov         r10,           8(r15)  \n\t"
+        "mov         r11,           10(r15) \n\t"
+        "mov         r4,            12(r15) \n\t"
+        "mov         r5,            14(r15) \n\t"
+        // Inverse ShiftRows, Inverse AddRoundKeys, Inverse AddConstant
+        // and Inverse SubColumn
         "mov.b       0(r15),        r4      \n\t" // s0' = INV_SBOX[s0]^rks[0]^rc
         "xor.b       @r14+,         r4      \n\t"
         "mov.b       INV_SBOX(r4),  0(r15)  \n\t" 
@@ -368,6 +343,10 @@ void Decrypt(uint8_t *block, uint8_t *roundKeys)
         "mov.b       INV_SBOX(r12), 12(r15) \n\t" // s15' = INV_SBOX[s15]
     "dec             r13                    \n\t"
     "jne             dec_loop               \n\t"
+        "pop         r11        \n\t"
+        "pop         r10        \n\t"
+        "pop         r9         \n\t"
+        "pop         r8         \n\t"
         "pop         r7         \n\t"
         "pop         r6         \n\t"
         "pop         r5         \n\t"
