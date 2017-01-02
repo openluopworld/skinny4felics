@@ -319,27 +319,21 @@ void Encrypt(uint8_t *block, uint8_t *roundKeys)
         "add         #4,        r14          \n\t" // next round keys
         "mov.b       8(r15),    r12          \n\t"
         "mov.b       10(r15),   r4           \n\t" // s8' = SBOX[s10]
-        "mov.b       SBOX(r4),  r4           \n\t"
-        "mov.b       r4,        8(r15)       \n\t"
+        "mov.b       SBOX(r4),  8(r15)       \n\t"
         "mov.b       SBOX(r12), r4           \n\t" // s10' = SBOX[s8]^rc
         "xor.b       #0x0002,   r4           \n\t"
         "mov.b       r4,        10(r15)      \n\t"
         "mov.b       9(r15),    r12          \n\t"
         "mov.b       11(r15),   r4           \n\t" // s9' = SBOX[s11]
-        "mov.b       SBOX(r4),  r4           \n\t"
-        "mov.b       r4,        9(r15)       \n\t"
-        "mov.b       SBOX(r12), r4           \n\t" // s11' = SBOX[s9]
-        "mov.b       r4,        11(r15)      \n\t"
+        "mov.b       SBOX(r4),  9(r15)       \n\t"
+        "mov.b       SBOX(r12), 11(r15)      \n\t" // s11' = SBOX[s9]
         "mov.b       12(r15),   r12          \n\t"
         "mov.b       13(r15),   r4           \n\t" // s12' = SBOX[s13]
-        "mov.b       SBOX(r4),  r4           \n\t"
-        "mov.b       r4,        12(r15)      \n\t"
+        "mov.b       SBOX(r4),  12(r15)      \n\t"
         "mov.b       14(r15),   r4           \n\t" // s13' = SBOX[s14]
-        "mov.b       SBOX(r4),  r4           \n\t"
-        "mov.b       r4,        13(r15)      \n\t"
+        "mov.b       SBOX(r4),  13(r15)      \n\t"
         "mov.b       15(r15),   r4           \n\t" // s14' = SBOX[s15]
-        "mov.b       SBOX(r4),  r4           \n\t"
-        "mov.b       r4,        14(r15)      \n\t"
+        "mov.b       SBOX(r4),  14(r15)      \n\t"
         "mov.b       SBOX(r12), 15(r15)      \n\t" // s15' = SBOX[s12]
         // MixColumn
         // xor  s8,  s4
