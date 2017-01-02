@@ -46,6 +46,7 @@ void Encrypt(uint8_t *block, uint8_t *roundKeys)
     /* r24      : loop control              */
     /* r25      : const 0x02                */
     /* r26-r27  : X points to plain text    */
+    /* r28-r29  : Y points to SBOX          */
     /* r30-r31  : Z points to roundKeys     */
     /* -------------------------------------*/
     // s0  s1  s2  s3       r8  r9  r10 r11
@@ -81,6 +82,8 @@ void Encrypt(uint8_t *block, uint8_t *roundKeys)
         "push        r28        \n\t"
         "push        r29        \n\t"
         // load plain text
+        // The registers are not in order. This is just to keep
+        // pace with the result of MixColumn.
         //               s13 s14 s15 s12      r21 r22 r23 r20
         //               s0  s1  s2  s3   =   r8  r9  r10 r11
         // Cipher State: s7  s4  s5  s6   =   r15 r12 r13 r14
@@ -103,12 +106,12 @@ void Encrypt(uint8_t *block, uint8_t *roundKeys)
         "ld          r17,         x         \n\t"
         // set currentRound
         "ldi         r24,         40        \n\t"
-        // used for const 0x02
+        // used for constant 0x02
         "ldi         r25,         0x02      \n\t"
         "ldi         r29,         hi8(SBOX) \n\t"
         // encryption
     "enc_loop:                              \n\t"
-        // shift_row_with_sub_column
+        // SubColumn with ShiftRow
         //               s13 s14 s15 s12      r21 r22 r23 r20
         //               s0  s1  s2  s3   =   r8  r9  r10 r11
         // Cipher State: s7  s4  s5  s6   =   r15 r12 r13 r14
@@ -151,7 +154,9 @@ void Encrypt(uint8_t *block, uint8_t *roundKeys)
         "ld          r18,         y         \n\t"
         "mov         r28,         r7        \n\t"
         "ld          r13,         y         \n\t"
-        // add_round_const_round_key
+        // AddRoundConstant and AddRoundKeys
+        // After 'SubColumn and ShiftRow', the registers are in
+        // right order.
         //               s0  s1  s2  s3       r8  r9  r10 r11
         //               s4  s5  s6  s7   =   r12 r13 r14 r15
         // Cipher State: s8  s9  s10 s11  =   r16 r17 r18 r19
@@ -193,14 +198,18 @@ void Encrypt(uint8_t *block, uint8_t *roundKeys)
         "eor         r15,         r6        \n\t"
         "eor         r16,         r25       \n\t"
         #endif
-        // mix column
+        // MixColumn
+        // After 'MixColumn', the registers are in wrong order.
+        // And this is recovered to right order in 'SubColumn
+        // with ShiftRow' of the next round. By doing so, the
+        // instructions to implement 'ShiftRow' can be redecues.
+        // eor  s4,  s8
+        // eor  s8,  s0
+        // eor  s12, s8
         //               s13 s14 s15 s12      r21 r22 r23 r20
         //               s0  s1  s2  s3   =   r8  r9  r10 r11
         // Cipher State: s7  s4  s5  s6   =   r15 r12 r13 r14
         //               s10 s11 s8  s9       r18 r19 r16 r17
-        // eor  k4,  k8
-        // eor  k8,  k0
-        // eor  k12, k8
         // first column
         "eor         r15,         r18       \n\t"
         "eor         r18,         r8        \n\t"
@@ -217,7 +226,7 @@ void Encrypt(uint8_t *block, uint8_t *roundKeys)
         "eor         r14,         r17       \n\t"
         "eor         r17,         r11       \n\t"
         "eor         r20,         r17       \n\t"
-        "dec         r24                    \n\t"
+    "dec             r24                    \n\t"
     "brne            enc_loop               \n\t"
         // store cipher text
         "st          x,           r17       \n\t"
