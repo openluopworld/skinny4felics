@@ -68,7 +68,7 @@ void RunEncryptionKeySchedule(uint8_t *key, uint8_t *roundKeys)
         "push         r28        \n\t"
         "push         r29        \n\t"
         "movw         r26,        r24       \n\t"
-        "mov          r28,        r22       \n\t"
+        "movw         r28,        r22       \n\t"
         "ldi          r23,        40        \n\t"
         // load_keys
         // r7  r8  r9  r10
