@@ -112,6 +112,7 @@ void Encrypt(uint8_t *block, uint8_t *roundKeys)
         // encryption
     "enc_loop:                              \n\t"
         // SubColumn with ShiftRow
+        // The SBOX is stored in RAM. It can also be stored in Flash.
         //               s13 s14 s15 s12      r21 r22 r23 r20
         //               s0  s1  s2  s3   =   r8  r9  r10 r11
         // Cipher State: s7  s4  s5  s6   =   r15 r12 r13 r14

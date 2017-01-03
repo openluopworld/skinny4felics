@@ -115,7 +115,7 @@ void Decrypt(uint8_t *block, uint8_t *roundKeys)
         "ldi         r29,          hi8(INV_SBOX)\n\t"
         // encryption
     "dec_loop:                               \n\t"
-        // mix column
+        // Inverse MixColumn
         // eor s0, s12
         // eor s12, s4
         // eor s8, s12
@@ -139,7 +139,7 @@ void Decrypt(uint8_t *block, uint8_t *roundKeys)
         "eor         r11,         r23        \n\t"
         "eor         r23,         r15        \n\t"
         "eor         r19,         r23        \n\t"
-        // shift row, add_round_const_round_key
+        // Inverse ShiftRows, Inverse AddRoundKeys, Inverse AddConstant
         //                s4  s5  s6  s7       r12 r13 r14 r15
         //                s8  s9  s10 s11  =   r16 r17 r18 r19
         // Cipher State   s12 s13 s14 s15  =   r20 r21 r22 r23
@@ -162,7 +162,8 @@ void Decrypt(uint8_t *block, uint8_t *roundKeys)
         "eor         r16,         r6         \n\t"
         "sbiw        r30,         16         \n\t"
         "eor         r22,         r25        \n\t"
-        // shift_row_with_sub_column
+        // Inverse SubColumn
+        // The INV_SBOX is stored in RAM. It can also be stored in Flash.
         //                s4  s5  s6  s7       r12 r13 r14 r15
         //                s9  s10 s11 s8   =   r17 r18 r19 r16
         // Cipher State   s14 s15 s12 s13  =   r22 r23 r20 r21
