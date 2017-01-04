@@ -182,6 +182,93 @@ void Encrypt(uint8_t *block, uint8_t *roundKeys)
 #elif defined MSP
 void Encrypt(uint8_t *block, uint8_t *roundKeys)
 {
+    /* r4-r7   : cipher state                */
+    /* r10-r12 : temp use                    */
+    /* r13     : currentRound                */
+    /* r14     : point to round keys         */
+    /* r15     : point to block              */
+    asm volatile(
+        "push        r4         \n\t"
+        "push        r5         \n\t"
+        "push        r6         \n\t"
+        "push        r7         \n\t"
+        "push        r10        \n\t"
+        "push        r11        \n\t"
+        "mov         #32,       r13          \n\t"
+        "mov         0(r15),    r4           \n\t"
+        "mov         2(r15),    r5           \n\t"
+        "mov         4(r15),    r6           \n\t"
+        "mov         6(r15),    r7           \n\t"
+    "enc_loop:                               \n\t"
+        // SubColumn, AddConstant, AddRoundKeys
+        "mov.b       r4,        r12          \n\t" 
+        "mov.b       SBOX(r12), r11          \n\t"
+        "swpb        r4                      \n\t"
+        "mov.b       r4,        r12          \n\t"
+        "mov.b       SBOX(r12), r10          \n\t"
+        "swpb        r10                     \n\t"
+        "xor         r11,       r10          \n\t"
+        "xor         @r14+,     r10          \n\t"
+        "mov.b       r7,        r12          \n\t" // first line
+        "mov.b       SBOX(r12), r11          \n\t"
+        "swpb        r7                      \n\t"
+        "mov.b       r7,        r12          \n\t"
+        "mov.b       SBOX(r12), r4           \n\t"
+        "swpb        r4                      \n\t"
+        "xor         r11,       r4           \n\t"
+        "mov.b       r6,        r12          \n\t" // fourth line
+        "mov.b       SBOX(r12), r11          \n\t"
+        "swpb        r6                      \n\t"
+        "mov.b       r6,        r12          \n\t"
+        "mov.b       SBOX(r12), r7           \n\t"
+        "swpb        r7                      \n\t"
+        "xor         r11,       r7           \n\t"
+        "xor         #0x2,      r7           \n\t"
+        "mov.b       r5,        r12          \n\t" // third line
+        "mov.b       SBOX(r12), r11          \n\t"
+        "swpb        r5                      \n\t"
+        "mov.b       r5,        r12          \n\t"
+        "mov.b       SBOX(r12), r6           \n\t"
+        "swpb        r6                      \n\t"
+        "xor         r11,       r6           \n\t"
+        "xor         @r14+,     r6           \n\t"
+        "mov         r10,       r5           \n\t" // second line 
+        // ShiftRow
+        "bit         #1,        r6           \n\t"
+        "rrc         r6                      \n\t"
+        "bit         #1,        r6           \n\t"
+        "rrc         r6                      \n\t"
+        "bit         #1,        r6           \n\t"
+        "rrc         r6                      \n\t"
+        "bit         #1,        r6           \n\t"
+        "rrc         r6                      \n\t"
+        "swpb        r7                      \n\t"
+        "rla         r4                      \n\t"
+        "adc         r4                      \n\t"
+        "rla         r4                      \n\t"
+        "adc         r4                      \n\t"
+        "rla         r4                      \n\t"
+        "adc         r4                      \n\t"
+        "rla         r4                      \n\t"
+        "adc         r4                      \n\t"
+        // MixColumn
+        "xor         r7,        r6           \n\t"
+        "xor         r5,        r7           \n\t"
+        "xor         r7,        r4           \n\t"
+    "dec             r13                     \n\t"
+    "jne             enc_loop                \n\t"
+        "mov         r4,        0(r15)       \n\t"
+        "mov         r5,        2(r15)       \n\t"
+        "mov         r6,        4(r15)       \n\t"
+        "mov         r7,        6(r15)       \n\t"
+        "pop         r11        \n\t"
+        "pop         r10        \n\t"
+        "pop         r7         \n\t"
+        "pop         r6         \n\t"
+        "pop         r5         \n\t"
+        "pop         r4         \n\t"
+    :
+    : [block] "m" (block), [roundKeys] "m" (roundKeys), [SBOX] "" (SBOX));
 }
 
 #elif defined ARM
