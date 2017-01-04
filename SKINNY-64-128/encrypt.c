@@ -69,6 +69,7 @@ void Encrypt(uint8_t *block, uint8_t *roundKeys)
         "push        r17        \n\t"
         "push        r28        \n\t"
         "push        r29        \n\t"
+        "movw        r28,         r22       \n\t"
         // load plain text
         "ld          r14,         x+        \n\t"
         "ld          r15,         x+        \n\t"
@@ -79,7 +80,7 @@ void Encrypt(uint8_t *block, uint8_t *roundKeys)
         "ld          r20,         x+        \n\t"
         "ld          r21,         x         \n\t"
         // set currentRound
-        "ldi         r24,         32        \n\t"
+        "ldi         r24,         36        \n\t"
         // used for constant 0x02
         "ldi         r25,         0x02      \n\t"
         "ldi         r31,         hi8(SBOX) \n\t"
@@ -176,7 +177,7 @@ void Encrypt(uint8_t *block, uint8_t *roundKeys)
         "pop         r15        \n\t"
         "pop         r14        \n\t"
     :
-    : [block] "x" (block), [roundKeys] "y" (roundKeys), [SBOX] "" (SBOX));
+    : [block] "x" (block), [roundKeys] "" (roundKeys), [SBOX] "" (SBOX));
 }
 
 #elif defined MSP
@@ -194,7 +195,7 @@ void Encrypt(uint8_t *block, uint8_t *roundKeys)
         "push        r7         \n\t"
         "push        r10        \n\t"
         "push        r11        \n\t"
-        "mov         #32,       r13          \n\t"
+        "mov         #36,       r13          \n\t"
         "mov         0(r15),    r4           \n\t"
         "mov         2(r15),    r5           \n\t"
         "mov         4(r15),    r6           \n\t"
@@ -330,7 +331,7 @@ void Encrypt(uint8_t *block, uint8_t *roundKeys)
         "mov        r6,       r2               \n\t"
         "bfi        r5,r5,    #16, #4          \n\t"
         "mov        r2,       r5, lsr #4       \n\t"
-		"rev16      r5,       r4               \n\t"
+        "rev16      r5,       r4               \n\t"
         "bfi        r3,r3,    #16, #12         \n\t"
         "mov        r4,       r3, lsr #12      \n\t"
         "mov        r3,       r6               \n\t"
