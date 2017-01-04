@@ -274,6 +274,78 @@ void Encrypt(uint8_t *block, uint8_t *roundKeys)
 #elif defined ARM
 void Encrypt(uint8_t *block, uint8_t *roundKeys)
 {
+    // r0    : ponits to plaintext
+    // r1    : points to roundKeys
+    // r2-r5 : cipher state
+    // r6-r7 : temp use
+    // r8    : loop control
+    // r9    : points to SBOX
+    // r10   : 0xff
+    asm volatile(
+        "stmdb      sp!,      {r2-r10}         \n\t"
+        "mov        r8,       #36              \n\t"
+        "ldr        r9,       =SBOX            \n\t"
+        "mov        r10,      #0xff            \n\t"
+        "ldrd       r2, r4,   [r0, #0]         \n\t"
+        "mov        r3,       r2, lsr #16      \n\t"
+        "mov        r5,       r4, lsr #16      \n\t"
+    "enc_loop:                                 \n\t"
+        // SubColumn
+        // r2 (--  --  --  --  s3  s2  s1  s0)
+        // r3 (--  --  --  --  s7  s6  s5  s4)
+        // r2 (--  --  --  --  s11 s10 s9  s8)
+        // r3 (--  --  --  --  s15 s14 s13 s12)
+        "and        r6,       r2, #0xff        \n\t"
+        "ldrb       r6,       [r9,r6]          \n\t"
+        "bfi        r2,r6,    #0, #8           \n\t"
+        "and        r6,       r10, r2, lsr #8  \n\t"
+        "ldrb       r6,       [r9,r6]          \n\t"
+        "bfi        r2,r6,    #8, #8           \n\t"
+        "and        r6,       r3, #0xff        \n\t"
+        "ldrb       r6,       [r9,r6]          \n\t"
+        "bfi        r3,r6,    #0, #8           \n\t"
+        "and        r6,       r10, r3, lsr #8  \n\t"
+        "ldrb       r6,       [r9,r6]          \n\t"
+        "bfi        r3,r6,    #8, #8           \n\t"
+        "and        r6,       r4, #0xff        \n\t"
+        "ldrb       r6,       [r9,r6]          \n\t"
+        "bfi        r4,r6,    #0, #8           \n\t"
+        "and        r6,       r10, r4, lsr #8  \n\t"
+        "ldrb       r6,       [r9,r6]          \n\t"
+        "bfi        r4,r6,    #8, #8           \n\t"
+        "and        r6,       r5, #0xff        \n\t"
+        "ldrb       r6,       [r9,r6]          \n\t"
+        "bfi        r5,r6,    #16, #8          \n\t"
+        "mov        r6,       r5, lsr #24      \n\t"
+        "ldrb       r6,       [r9,r6]          \n\t"
+        "bfi        r5,r6,    #24, #8          \n\t"
+        // AddRoundKey and AddRoundConst
+        "ldmia      r1!,      {r6}             \n\t"
+        // "ldr        r6,       [r1,#0]          \n\t"
+        // "adds       r1,       r1, #4           \n\t"
+        "eors       r2,       r2, r6           \n\t"
+        "eors       r3,       r3, r6, lsr #16  \n\t"
+        "eors       r4,       r4, #0x02        \n\t"
+        // ShiftRow
+        "mov        r6,       r2               \n\t"
+        "bfi        r5,r5,    #16, #4          \n\t"
+        "mov        r2,       r5, lsr #4       \n\t"
+		"rev16      r5,       r4               \n\t"
+        "bfi        r3,r3,    #16, #12         \n\t"
+        "mov        r4,       r3, lsr #12      \n\t"
+        "mov        r3,       r6               \n\t"
+        // MixColumn
+        "eors       r4,       r4, r5           \n\t"
+        "eors       r5,       r5, r3           \n\t"
+        "eors       r2,       r2, r5           \n\t"
+    "subs           r8,       r8, #1           \n\t"
+    "bne            enc_loop                   \n\t"
+        "bfi        r2, r3,   #16, #16         \n\t"
+        "bfi        r4, r5,   #16, #16         \n\t"
+        "ldrd       r2, r4,   [r0, #0]         \n\t"
+        "ldmia      sp!,      {r2-r10}         \n\t"
+    :
+    : [block] "r" (block), [roundKeys] "r" (roundKeys), [SBOX] "" (SBOX));
 }
 
 #else
