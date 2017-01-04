@@ -246,6 +246,92 @@ void RunEncryptionKeySchedule(uint8_t *key, uint8_t *roundKeys)
 #elif defined MSP
 void RunEncryptionKeySchedule(uint8_t *key, uint8_t *roundKeys)
 {
+    /* r4-r11  : key state                   */
+    /* r12     : temp use                    */
+    /* r13     : currentRound                */
+    /* r14     : point to roundKeys          */
+    /* r15     : point to key and RC         */
+    asm volatile (
+        /*
+         * [r15-r12]: In MSPGCC, registers are passed starting with R15 and descending to R12.
+         *     For example, if two integers are passed,
+         *     the first is passed in R15 and the second is passed in R14.
+         * [r11-r4]:  r11-r4 must be pushed if used.
+         */
+        "push         r4            \n\t"
+        "push         r5            \n\t"
+        "push         r6            \n\t"
+        "push         r7            \n\t"
+        "push         r8            \n\t"
+        "push         r9            \n\t"
+        "push         r10           \n\t"
+        "push         r11           \n\t"
+        // Load master keys
+        "mov          @r15+,        r4            \n\t"
+        "mov          @r15+,        r5            \n\t"
+        "mov          @r15+,        r6            \n\t"
+        "mov          @r15+,        r7            \n\t"
+        "mov          @r15+,        r8            \n\t"
+        "mov          @r15+,        r9            \n\t"
+        "mov          @r15+,        r10           \n\t"
+        "mov          @r15+,        r11           \n\t"
+        "sub          #8,           r1            \n\t"
+        "mov          %[RC],        r15           \n\t"
+        "mov          #36,          r13           \n\t"
+    "extend_loop:                                 \n\t"
+        // AddRoundConstant
+        "mov.b        @r15+,        r12           \n\t"
+        "mov          r12,          0(r1)         \n\t"
+        "and          #0x000f,      r12           \n\t"
+        "xor          r4,           r12           \n\t"
+        "xor          r8,           r12           \n\t"
+        "mov          r12,          0(r14)        \n\t"
+        "mov          0(r1),        r12           \n\t"
+        "and          #0x0030,      r12           \n\t"
+        "rra          r12                         \n\t"
+        "rra          r12                         \n\t"
+        "rra          r12                         \n\t"
+        "rra          r12                         \n\t"
+        "xor          r5,           r12           \n\t"
+        "xor          r9,           r12           \n\t"
+        "mov          r12,          2(r14)        \n\t"
+        "add          #4,           r14           \n\t"
+        // Permutation
+        // r4 (k3  k2  k1  k0)          r4 (k13 k8  k15 k9)
+        // r5 (k7  k6  k5  k4)          r5 (k11 k12 k14 k10)
+        // r6 (k11 k10 k9  k8)   -----> r6 (k3  k2  k1  k0)
+        // r7 (k15 k14 k13 k12)         r7 (k7  k6  k5  k4)
+        // Compute r4
+        "mov          r6,           r12           \n\t"
+        "mov          r4,           r6            \n\t"
+        "mov          r7,           r4            \n\t"
+        "mov          r5,           r7            \n\t"
+        "swpb         r4"
+        "mov          r4,          r13"
+        "and          #0xf0f0,      r4"
+        "mov          r12,          r5"
+        "rra          r5"
+        "rra          r5"
+        "rra          r5"
+        "rra          r5"
+        "and          #0xf,         r5"
+        "xor          r5,           r4"
+        "mov          r12,          r5"
+        "swpb         r5"
+        "and          #0x0f00,      r5"
+        "xor          r5,           r4"
+        // Compute r5
+        /* ----------------------------------------- */
+        "pop          r11           \n\t"
+        "pop          r10           \n\t"
+        "pop          r9            \n\t"
+        "pop          r8            \n\t"
+        "pop          r7            \n\t"
+        "pop          r6            \n\t"
+        "pop          r5            \n\t"
+        "pop          r4            \n\t"    
+    :
+    : [key] "m" (key), [roundKeys] "m" (roundKeys), [RC] "" (RC));
 }
 
 #elif defined ARM
