@@ -70,7 +70,7 @@ void Encrypt(uint8_t *block, uint8_t *roundKeys)
         "push        r28        \n\t"
         "push        r29        \n\t"
         "movw        r28,         r22       \n\t"
-        // load plain text
+        // Load plain text
         "ld          r14,         x+        \n\t"
         "ld          r15,         x+        \n\t"
         "ld          r16,         x+        \n\t"
@@ -294,8 +294,8 @@ void Encrypt(uint8_t *block, uint8_t *roundKeys)
         // SubColumn
         // r2 (--  --  --  --  s3  s2  s1  s0)
         // r3 (--  --  --  --  s7  s6  s5  s4)
-        // r2 (--  --  --  --  s11 s10 s9  s8)
-        // r3 (--  --  --  --  s15 s14 s13 s12)
+        // r4 (--  --  --  --  s11 s10 s9  s8)
+        // r5 (--  --  --  --  s15 s14 s13 s12)
         "and        r6,       r2, #0xff        \n\t"
         "ldrb       r6,       [r9,r6]          \n\t"
         "bfi        r2,r6,    #0, #8           \n\t"
@@ -322,8 +322,6 @@ void Encrypt(uint8_t *block, uint8_t *roundKeys)
         "bfi        r5,r6,    #24, #8          \n\t"
         // AddRoundKey and AddRoundConst
         "ldmia      r1!,      {r6}             \n\t"
-        // "ldr        r6,       [r1,#0]          \n\t"
-        // "adds       r1,       r1, #4           \n\t"
         "eors       r2,       r2, r6           \n\t"
         "eors       r3,       r3, r6, lsr #16  \n\t"
         "eors       r4,       r4, #0x02        \n\t"
@@ -343,7 +341,7 @@ void Encrypt(uint8_t *block, uint8_t *roundKeys)
     "bne            enc_loop                   \n\t"
         "bfi        r2, r3,   #16, #16         \n\t"
         "bfi        r4, r5,   #16, #16         \n\t"
-        "ldrd       r2, r4,   [r0, #0]         \n\t"
+        "strd       r2, r4,   [r0, #0]         \n\t"
         "ldmia      sp!,      {r2-r10}         \n\t"
     :
     : [block] "r" (block), [roundKeys] "r" (roundKeys), [SBOX] "" (SBOX));

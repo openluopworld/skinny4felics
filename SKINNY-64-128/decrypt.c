@@ -239,7 +239,7 @@ void Decrypt(uint8_t *block, uint8_t *roundKeys)
         "mov.b       INV_SBOX(r12), r10      \n\t"
         "swpb        r10                     \n\t"
         "xor         r11,           r10      \n\t" // first line
-        "xor         @r14+,         r6       \n\t"
+		"xor         @r14+,         r6       \n\t"
         "mov.b       r6,            r12      \n\t" 
         "mov.b       INV_SBOX(r12), r11      \n\t"
         "swpb        r6                      \n\t"
@@ -247,7 +247,7 @@ void Decrypt(uint8_t *block, uint8_t *roundKeys)
         "mov.b       INV_SBOX(r12), r5       \n\t"
         "swpb        r5                      \n\t"
         "xor         r11,           r5       \n\t" // second line
-        "xor         #0x2,          r7       \n\t"
+		"xor         #0x2,          r7       \n\t"
         "mov.b       r7,            r12      \n\t" 
         "mov.b       INV_SBOX(r12), r11      \n\t"
         "swpb        r7                      \n\t"
@@ -277,8 +277,8 @@ void Decrypt(uint8_t *block, uint8_t *roundKeys)
 }
 
 #elif defined ARM
-void Decrypt(uint8_t *block, uint8_t *roundKeys)
-{
+void Decrypt(uint8_t *block, uint8_t *roundKeys) {
+
     // r0    : ponits to ciphertext
     // r1    : points to roundKeys
     // r2-r5 : cipher state
@@ -292,14 +292,15 @@ void Decrypt(uint8_t *block, uint8_t *roundKeys)
         "ldr        r9,       =INV_SBOX        \n\t"
         "mov        r10,      #0xff            \n\t"
         "adds       r1,       r1, #140         \n\t"
+        // r2 (--  --  --  --  s3  s2  s1  s0)
+        // r3 (--  --  --  --  s7  s6  s5  s4)
+        // r4 (--  --  --  --  s11 s10 s9  s8)
+        // r5 (--  --  --  --  s15 s14 s13 s12)
         "ldrd       r2, r4,   [r0, #0]         \n\t"
         "mov        r3,       r2, lsr #16      \n\t"
         "mov        r5,       r4, lsr #16      \n\t"
     "enc_loop:                                 \n\t"
         // Inverse MixColumn
-        // eor  s0,  s12
-        // eor  s12, s4
-        // eor  s8,  s12
         "eors       r2,       r2, r5           \n\t"
         "eors       r5,       r5, r3           \n\t"
         "eors       r4,       r4, r5           \n\t"
