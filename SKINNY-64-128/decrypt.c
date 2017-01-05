@@ -279,6 +279,82 @@ void Decrypt(uint8_t *block, uint8_t *roundKeys)
 #elif defined ARM
 void Decrypt(uint8_t *block, uint8_t *roundKeys)
 {
+    // r0    : ponits to ciphertext
+    // r1    : points to roundKeys
+    // r2-r5 : cipher state
+    // r6-r7 : temp use
+    // r8    : loop control
+    // r9    : points to INV_SBOX
+    // r10   : 0xff
+    asm volatile(
+        "stmdb      sp!,      {r2-r10}         \n\t"
+        "mov        r8,       #36              \n\t"
+        "ldr        r9,       =INV_SBOX        \n\t"
+        "mov        r10,      #0xff            \n\t"
+        "adds       r1,       r1, #140         \n\t"
+        "ldrd       r2, r4,   [r0, #0]         \n\t"
+        "mov        r3,       r2, lsr #16      \n\t"
+        "mov        r5,       r4, lsr #16      \n\t"
+    "enc_loop:                                 \n\t"
+        // Inverse MixColumn
+        // eor  s0,  s12
+        // eor  s12, s4
+        // eor  s8,  s12
+        "eors       r2,       r2, r5           \n\t"
+        "eors       r5,       r5, r3           \n\t"
+        "eors       r4,       r4, r5           \n\t"
+        // Inverse ShiftRow
+        "bfi        r4,       r4, #16, #4      \n\t"
+        "lsr        r4,       r4, #4           \n\t"
+        "bfi        r5,       r5, #16, #8      \n\t"
+        "lsr        r5,       r5, #8           \n\t"
+        "bfi        r2,       r2, #16, #4      \n\t"
+        "lsr        r2,       r2, #4           \n\t"
+        // Inverse AddRoundKey and Inverse AddRoundConst
+        "ldr        r6,       [r1,#0]          \n\t"
+        "subs       r1,       r1, #4           \n\t"
+        "eors       r3,       r3, r6           \n\t"
+        "eors       r4,       r4, r6, lsr #16  \n\t"
+        "eors       r5,       r5, #0x02        \n\t"
+        // Inverse SubColumn
+        // fourth line, store r7 for temp
+        "and        r6,       r2, #0xff        \n\t"
+        "ldrb       r6,       [r9,r6]          \n\t"
+        "bfi        r7,r6,    #0, #8           \n\t"
+        "and        r6,       r10, r2, lsr #8  \n\t"
+        "ldrb       r6,       [r9,r6]          \n\t"
+        "bfi        r7,r6,    #8, #8           \n\t"
+        // first line
+        "and        r6,       r3, #0xff        \n\t"
+        "ldrb       r6,       [r9,r6]          \n\t"
+        "bfi        r2,r6,    #0, #8           \n\t"
+        "and        r6,       r10, r3, lsr #8  \n\t"
+        "ldrb       r6,       [r9,r6]          \n\t"
+        "bfi        r2,r6,    #8, #8           \n\t"
+        // second line
+        "and        r6,       r4, #0xff        \n\t"
+        "ldrb       r6,       [r9,r6]          \n\t"
+        "bfi        r3,r6,    #0, #8           \n\t"
+        "and        r6,       r10, r4, lsr #8  \n\t"
+        "ldrb       r6,       [r9,r6]          \n\t"
+        "bfi        r3,r6,    #8, #8           \n\t"
+        // third line
+        "and        r6,       r5, #0xff        \n\t"
+        "ldrb       r6,       [r9,r6]          \n\t"
+        "bfi        r4,r6,    #0, #8           \n\t"
+        "and        r6,       r10, r5, lsr #8  \n\t"
+        "ldrb       r6,       [r9,r6]          \n\t"
+        "bfi        r4,r6,    #8, #8           \n\t"
+        // recover the first line
+        "mov        r5,       r7               \n\t"
+    "subs           r8,       r8, #1           \n\t"
+    "bne            enc_loop                   \n\t"
+        "bfi        r2,       r3, #16, #16     \n\t"
+        "bfi        r4,       r5, #16, #16     \n\t"
+        "strd       r2, r4,   [r0, #0]         \n\t"
+        "ldmia      sp!,      {r2-r10}         \n\t"
+    :
+    : [block] "r" (block), [roundKeys] "r" (roundKeys), [INV_SBOX] "" (INV_SBOX));
 }
 
 #else
