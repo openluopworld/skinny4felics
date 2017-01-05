@@ -184,6 +184,96 @@ void Decrypt(uint8_t *block, uint8_t *roundKeys)
 #elif defined MSP
 void Decrypt(uint8_t *block, uint8_t *roundKeys)
 {
+    /* r4-r7   : cipher state                */
+    /* r10-r12 : temp use                    */
+    /* r13     : currentRound                */
+    /* r14     : point to round keys         */
+    /* r15     : point to block              */
+    asm volatile(
+        "push        r4         \n\t"
+        "push        r5         \n\t"
+        "push        r6         \n\t"
+        "push        r7         \n\t"
+        "push        r10        \n\t"
+        "push        r11        \n\t"
+        // Init
+        "mov         #36,           r13      \n\t"
+        "add         #140,          r14      \n\t"
+        "mov         0(r15),        r4       \n\t"
+        "mov         2(r15),        r5       \n\t"
+        "mov         4(r15),        r6       \n\t"
+        "mov         6(r15),        r7       \n\t"
+    "dec_loop:                               \n\t"
+        // Inverse MixColumn
+        // xor s12, s0 
+        // xor s4,  s12
+        // xor s12, s8 
+        "xor         r7,            r4       \n\t"
+        "xor         r5,            r7       \n\t"
+        "xor         r7,            r6       \n\t"
+        // Inverse ShiftRows
+        "bit         #1,            r6       \n\t"
+        "rrc         r6                      \n\t"
+        "bit         #1,            r6       \n\t"
+        "rrc         r6                      \n\t"
+        "bit         #1,            r6       \n\t"
+        "rrc         r6                      \n\t"
+        "bit         #1,            r6       \n\t"
+        "rrc         r6                      \n\t"
+        "swpb        r7                      \n\t"
+        "rla         r4                      \n\t"
+        "adc         r4                      \n\t"
+        "rla         r4                      \n\t"
+        "adc         r4                      \n\t"
+        "rla         r4                      \n\t"
+        "adc         r4                      \n\t"
+        "rla         r4                      \n\t"
+        "adc         r4                      \n\t"
+        //Inverse AddRoundKeys, Inverse AddConstant
+        // and Inverse SubColumn
+        "xor         @r14+,         r5       \n\t"
+        "mov.b       r5,            r12      \n\t" 
+        "mov.b       INV_SBOX(r12), r11      \n\t"
+        "swpb        r5                      \n\t"
+        "mov.b       r5,            r12      \n\t"
+        "mov.b       INV_SBOX(r12), r10      \n\t"
+        "swpb        r10                     \n\t"
+        "xor         r11,           r10      \n\t" // first line
+        "xor         @r14+,         r6       \n\t"
+        "mov.b       r6,            r12      \n\t" 
+        "mov.b       INV_SBOX(r12), r11      \n\t"
+        "swpb        r6                      \n\t"
+        "mov.b       r6,            r12      \n\t"
+        "mov.b       INV_SBOX(r12), r5       \n\t"
+        "swpb        r5                      \n\t"
+        "xor         r11,           r5       \n\t" // second line
+        "xor         #0x2,          r7       \n\t"
+        "mov.b       r7,            r12      \n\t" 
+        "mov.b       INV_SBOX(r12), r11      \n\t"
+        "swpb        r7                      \n\t"
+        "mov.b       r7,            r12      \n\t"
+        "mov.b       INV_SBOX(r12), r6       \n\t"
+        "swpb        r6                      \n\t"
+        "xor         r11,           r6       \n\t" // third line
+        "mov.b       r4,            r12      \n\t" 
+        "mov.b       INV_SBOX(r12), r11      \n\t"
+        "swpb        r4                      \n\t"
+        "mov.b       r4,            r12      \n\t"
+        "mov.b       INV_SBOX(r12), r7       \n\t"
+        "swpb        r7                      \n\t"
+        "xor         r11,           r7       \n\t" // fourth line        
+        "mov         r10,           r4       \n\t"
+        "sub         #8,            r14      \n\t"  
+    "dec             r13                     \n\t"
+    "jne             dec_loop                \n\t"
+        "pop         r11        \n\t"
+        "pop         r10        \n\t"
+        "pop         r7         \n\t"
+        "pop         r6         \n\t"
+        "pop         r5         \n\t"
+        "pop         r4         \n\t"
+    :
+    : [block] "m" (block), [roundKeys] "m" (roundKeys), [INV_SBOX] "" (INV_SBOX));
 }
 
 #elif defined ARM
