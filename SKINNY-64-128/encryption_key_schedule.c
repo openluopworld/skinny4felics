@@ -441,7 +441,7 @@ void RunEncryptionKeySchedule(uint8_t *key, uint8_t *roundKeys)
         "and        r10,      r10, #0x30000   \n\t"
         "eors       r6,       r6, r10         \n\t"
         "eors       r6,       r6, r4          \n\t"
-        "strd       r6,       [r1,#0]         \n\t" // store round keys
+        "str        r6,       [r1,#0]         \n\t" // store round keys
         "adds       r1,       r1, #4          \n\t"
         // Permutation
         // r2(k7  k6  k5  k4  k3  k2  k1  k0)    k11 k12 k14 k10 k13 k8  k15 k9

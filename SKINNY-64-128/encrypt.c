@@ -144,7 +144,7 @@ void Encrypt(uint8_t *block, uint8_t *roundKeys)
         "eor         r22,         r21       \n\t"
         "andi        r22,         0x0f      \n\t"
         "eor         r20,         r22       \n\t"
-        "eor         r21,         r22       \n\t"       
+        "eor         r21,         r22       \n\t"
         // MixColumn
         "eor         r16,         r19       \n\t"
         "eor         r19,         r14       \n\t"
@@ -157,19 +157,18 @@ void Encrypt(uint8_t *block, uint8_t *roundKeys)
         "mov         r20,         r19       \n\t"
         "mov         r21,         r18       \n\t"
         "movw        r18,         r16       \n\t"
-        "movw        r16,         r22       \n\t"       
+        "movw        r16,         r22       \n\t"
     "dec             r24                    \n\t"
     "brne            enc_loop               \n\t"
-        // store cipher text
-        "st          x,           r23       \n\t"
-        "st          -x,          r22       \n\t"
-        "st          -x,          r21       \n\t"
+        // Store cipher text
+        "st          x,           r21       \n\t"
         "st          -x,          r20       \n\t"
         "st          -x,          r19       \n\t"
         "st          -x,          r18       \n\t"
         "st          -x,          r17       \n\t"
         "st          -x,          r16       \n\t"
-        // --------------------------------------
+        "st          -x,          r15       \n\t"
+        "st          -x,          r14       \n\t"
         "pop         r29        \n\t"
         "pop         r28        \n\t"
         "pop         r17        \n\t"
