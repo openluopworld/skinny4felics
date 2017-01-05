@@ -82,7 +82,7 @@ void Encrypt(uint8_t *block, uint8_t *roundKeys)
         // set currentRound
         "ldi         r24,         36        \n\t"
         // used for constant 0x02
-        "ldi         r25,         0x02      \n\t"
+        "ldi         r25,         0x20      \n\t"
         "ldi         r31,         hi8(SBOX) \n\t"
         // encryption
     "enc_loop:                              \n\t"

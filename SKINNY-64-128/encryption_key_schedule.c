@@ -104,8 +104,9 @@ void RunEncryptionKeySchedule(uint8_t *key, uint8_t *roundKeys)
         // XOR RoundConstant and the TweakKeys together
         "lpm          r24,        z+        \n\t"
         "mov          r25,        r24       \n\t"
-        "andi         r25,        0x0f      \n\t" // store k0
-        "mov          r6,         r8        \n\t"
+        "andi         r25,        0x0f      \n\t"
+        "swap         r25                   \n\t"
+        "mov          r6,         r8        \n\t" // store k0
         "eor          r6,         r25       \n\t"
         "eor          r6,         r16       \n\t"
         "st           y+,         r6        \n\t"
@@ -113,7 +114,6 @@ void RunEncryptionKeySchedule(uint8_t *key, uint8_t *roundKeys)
         "eor          r6,         r17       \n\t"
         "st           y+,         r6        \n\t"
         "andi         r24,        0x30      \n\t" // store k2
-        "swap         r24                   \n\t"
         "mov          r6,         r10       \n\t"
         "eor          r6,         r24       \n\t"
         "eor          r6,         r18       \n\t"
@@ -125,35 +125,36 @@ void RunEncryptionKeySchedule(uint8_t *key, uint8_t *roundKeys)
     "brne             again                 \n\t"
     "rjmp             key_schedule_exit     \n\t"
     "again:                                 \n\t"
-        // (k1  k0 ) (k3  k2 )        (k15 k9 ) (k13 k8 )
-        // (k5  k4 ) (k7  k6 )        (k14 k10) (k11 k12)
-        // (k9  k8 ) (k11 k10) -----> (k1  k0 ) (k3  k2 )
-        // (k13 k12) (k15 k14)        (k5  k4 ) (k7  k6 )
+        // (k0  k1 ) (k2  k3 )        (k9  k15) (k8  k13)
+        // (k4  k5 ) (k6  k7 )        (k10 k14) (k12 k11)
+        // (k8  k9 ) (k10 k11) -----> (k0  k1 ) (k2  k3 )
+        // (k12 k13) (k14 k15)        (k4  k5 ) (k6  k7 )
         // Tweak1
         "movw         r6,         r12       \n\t"
         "movw         r12,        r8        \n\t"
         "movw         r8,         r14       \n\t"
         "movw         r14,        r10       \n\t"
         "mov          r11,        r7        \n\t"
-        "and          r11,        r27       \n\t"
+        "and          r11,        r5        \n\t"
         "mov          r10,        r8        \n\t"
-        "and          r10,        r5        \n\t"
+        "and          r10,        r27       \n\t"
         "eor          r11,        r10       \n\t"
         "mov          r10,        r7        \n\t"
-        "and          r10,        r5        \n\t"
+        "and          r10,        r27       \n\t"
         "mov          r7,         r9        \n\t"
-        "and          r7,         r5        \n\t"
+        "and          r7,         r27       \n\t"
         "swap         r7                    \n\t"
         "eor          r10,        r7        \n\t"
         "mov          r7,         r8        \n\t"
-        "and          r7,         r27       \n\t"
+        "and          r7,         r5        \n\t"
         "mov          r8,         r6        \n\t"
-        "and          r6,         r5        \n\t"
+        "and          r6,         r27       \n\t"
         "eor          r7,         r6        \n\t"
-        "swap         r8                    \n\t"
+        "mov          r8,         r9        \n\t"
         "and          r8,         r5        \n\t"
-        "and          r9,         r27       \n\t"
-        "eor          r8,         r9        \n\t"
+        "swap         r6                    \n\t"
+        "and          r6,         r27       \n\t"
+        "eor          r8,         r6        \n\t"
         "mov          r9,         r7        \n\t"
         // Tweak2
         "movw         r6,         r20       \n\t"
