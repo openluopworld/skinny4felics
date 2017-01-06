@@ -286,10 +286,10 @@ void Encrypt(uint8_t *block, uint8_t *roundKeys)
         "mov        r5,       r4, lsr #16      \n\t"
     "enc_loop:                                 \n\t"
         // SubColumn
-        // r2 (--  --  --  --  s3  s2  s1  s0)
-        // r3 (--  --  --  --  s7  s6  s5  s4)
-        // r4 (--  --  --  --  s11 s10 s9  s8)
-        // r5 (--  --  --  --  s15 s14 s13 s12)
+        // r2 (--  --  --  --  s2  s3  s0  s1)
+        // r3 (--  --  --  --  s6  s7  s4  s5)
+        // r4 (--  --  --  --  s10 s11 s8  s9)
+        // r5 (--  --  --  --  s14 s15 s12 s13)
         "and        r6,       r2, #0xff        \n\t"
         "ldrb       r6,       [r9,r6]          \n\t"
         "bfi        r2,r6,    #0, #8           \n\t"
@@ -310,22 +310,22 @@ void Encrypt(uint8_t *block, uint8_t *roundKeys)
         "bfi        r4,r6,    #8, #8           \n\t"
         "and        r6,       r5, #0xff        \n\t"
         "ldrb       r6,       [r9,r6]          \n\t"
-        "bfi        r5,r6,    #16, #8          \n\t"
-        "mov        r6,       r5, lsr #24      \n\t"
+        "bfi        r5,r6,    #0, #8           \n\t"
+        "and        r6,       r10, r5, lsr #8  \n\t"
         "ldrb       r6,       [r9,r6]          \n\t"
-        "bfi        r5,r6,    #24, #8          \n\t"
+        "bfi        r5,r6,    #8, #8           \n\t"
         // AddRoundKey and AddRoundConst
         "ldmia      r1!,      {r6}             \n\t"
         "eors       r2,       r2, r6           \n\t"
         "eors       r3,       r3, r6, lsr #16  \n\t"
-        "eors       r4,       r4, #0x02        \n\t"
+        "eors       r4,       r4, #0x20        \n\t"
         // ShiftRow
         "mov        r6,       r2               \n\t"
-        "bfi        r5,r5,    #16, #4          \n\t"
-        "mov        r2,       r5, lsr #4       \n\t"
+        "bfi        r5,r5,    #16, #12         \n\t"
+        "mov        r2,       r5, lsr #12      \n\t"
         "rev16      r5,       r4               \n\t"
-        "bfi        r3,r3,    #16, #12         \n\t"
-        "mov        r4,       r3, lsr #12      \n\t"
+        "bfi        r3,r3,    #16, #4          \n\t"
+        "mov        r4,       r3, lsr #4       \n\t"
         "mov        r3,       r6               \n\t"
         // MixColumn
         "eors       r4,       r4, r5           \n\t"
