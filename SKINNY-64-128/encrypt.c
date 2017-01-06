@@ -218,7 +218,7 @@ void Encrypt(uint8_t *block, uint8_t *roundKeys)
         "mov.b       SBOX(r12), r7           \n\t"
         "swpb        r7                      \n\t"
         "xor         r11,       r7           \n\t"
-        "xor         #0x2,      r7           \n\t"
+        "xor         #0x20,     r7           \n\t"
         "mov.b       r5,        r12          \n\t" // third line
         "mov.b       SBOX(r12), r11          \n\t"
         "swpb        r5                      \n\t"
