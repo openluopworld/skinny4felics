@@ -52,5 +52,5 @@ r2 ---> s14 s15 s12 s13 s10 s11 s8  s9  ---> 0xe 0xf 0xc 0xd 0xa 0xb 0x8 0x9
 ```
 
 
-[SKINNY]:(https://sites.google.com/site/skinnycipher/)
-[FELICS]:(https://www.cryptolux.org/index.php/FELICS)
+[SKINNY]:<https://sites.google.com/site/skinnycipher/>
+[FELICS]:<https://www.cryptolux.org/index.php/FELICS>
