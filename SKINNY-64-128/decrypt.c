@@ -295,10 +295,10 @@ void Decrypt(uint8_t *block, uint8_t *roundKeys) {
         "ldr        r9,       =INV_SBOX        \n\t"
         "mov        r10,      #0xff            \n\t"
         "adds       r1,       r1, #140         \n\t"
-        // r2 (--  --  --  --  s3  s2  s1  s0)
-        // r3 (--  --  --  --  s7  s6  s5  s4)
-        // r4 (--  --  --  --  s11 s10 s9  s8)
-        // r5 (--  --  --  --  s15 s14 s13 s12)
+        // r2 (--  --  --  --  s2  s3  s0  s1)
+        // r3 (--  --  --  --  s6  s7  s4  s5)
+        // r4 (--  --  --  --  s10 s11 s8  s9)
+        // r5 (--  --  --  --  s14 s15 s12 s13)
         "ldrd       r2, r4,   [r0, #0]         \n\t"
         "mov        r3,       r2, lsr #16      \n\t"
         "mov        r5,       r4, lsr #16      \n\t"
@@ -308,10 +308,9 @@ void Decrypt(uint8_t *block, uint8_t *roundKeys) {
         "eors       r5,       r5, r3           \n\t"
         "eors       r4,       r4, r5           \n\t"
         // Inverse ShiftRow
-        "bfi        r4,       r4, #16, #4      \n\t"
-        "lsr        r4,       r4, #4           \n\t"
-        "bfi        r5,       r5, #16, #8      \n\t"
-        "lsr        r5,       r5, #8           \n\t"
+        "bfi        r4,       r4, #16, #12     \n\t"
+        "lsr        r4,       r4, #12          \n\t"
+        "rev16      r5,       r5               \n\t"
         "bfi        r2,       r2, #16, #4      \n\t"
         "lsr        r2,       r2, #4           \n\t"
         // Inverse AddRoundKey and Inverse AddRoundConst
@@ -319,7 +318,7 @@ void Decrypt(uint8_t *block, uint8_t *roundKeys) {
         "subs       r1,       r1, #4           \n\t"
         "eors       r3,       r3, r6           \n\t"
         "eors       r4,       r4, r6, lsr #16  \n\t"
-        "eors       r5,       r5, #0x02        \n\t"
+        "eors       r5,       r5, #0x20        \n\t"
         // Inverse SubColumn
         // fourth line, store r7 for temp
         "and        r6,       r2, #0xff        \n\t"
