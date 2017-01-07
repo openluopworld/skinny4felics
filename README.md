@@ -16,9 +16,6 @@ s12 s13 s14 s15
 ```
 where each element is a byte.
 
-### Implementation
-The round constant *c0* and *c1* are XOR-ed with the round keys in key schedule, but *c2* is XOR-ed with the cipher state in encryption (or decryption).
-
 ## SKINNY-64-128
 ### Test Vector
 ![Test Vector for SKINNY-64-128](./pic/skinny-64-128.png?raw=true)
@@ -54,8 +51,15 @@ r1 ---> s6  s7  s4  s5  s2  s3  s0  s1  ---> 0x6 0x7 0x4 0x5 0x2 0x3 0x0 0x1
 r2 ---> s14 s15 s12 s13 s10 s11 s8  s9  ---> 0xe 0xf 0xc 0xd 0xa 0xb 0x8 0x9
 ```
 
-### Implementation
-In key schedule, the round constant *c0* and *c1* are XOR-ed with *TK1* and *TK2*, the final values are stored as 'RoundKeys'.  The constant *c2* is XOR-ed with the cipher state in encryption (or decryption).
+## Implementation
+* In key schedule, the round constant *c0* and *c1* are XOR-ed with *TK1* and *TK2* (only for SKINNY-64-128), the final values are stored as 'RoundKeys'.  The constant *c2* is XOR-ed with the cipher state in encryption (or decryption).
+* For SKINNY-64-128, the *SBOX* and *Inverse-SBOX* do tiwce *SubColumn* each time. Parts of *SBOX* are as follows:
+```C
+SBOX_BYTE SBOX[256] = {
+    0xcc, 0xc6, 0xc9, 0xc0, 0xc1, 0xca, 0xc2, 0xcb, 0xc3, 0xc8, 0xc5, 0xcd, 0xc4, 0xce, 0xc7, 0xcf,
+    0x6c, 0x66, 0x69, 0x60, 0x61, 0x6a, 0x62, 0x6b, 0x63, 0x68, 0x65, 0x6d, 0x64, 0x6e, 0x67, 0x6f,
+    0x9c, 0x96, 0x99, 0x90, 0x91, 0x9a, 0x92, 0x9b, 0x93, 0x98, 0x95, 0x9d, 0x94, 0x9e, 0x97, 0x9f,
+```
 
 
 [SKINNY]:<https://sites.google.com/site/skinnycipher/>
