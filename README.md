@@ -16,6 +16,9 @@ s12 s13 s14 s15
 ```
 where each element is a byte.
 
+### Implementation
+The round constant *c0* and *c1* are XOR-ed with the round keys in key schedule, but *c2* is XOR-ed with the cipher state in encryption (or decryption).
+
 ## SKINNY-64-128
 ### Test Vector
 ![Test Vector for SKINNY-64-128](./pic/skinny-64-128.png?raw=true)
@@ -50,6 +53,9 @@ r4 ---> s14 s15 s12 s13 ---> 0xe 0xf 0xc 0xd
 r1 ---> s6  s7  s4  s5  s2  s3  s0  s1  ---> 0x6 0x7 0x4 0x5 0x2 0x3 0x0 0x1
 r2 ---> s14 s15 s12 s13 s10 s11 s8  s9  ---> 0xe 0xf 0xc 0xd 0xa 0xb 0x8 0x9
 ```
+
+### Implementation
+In key schedule, the round constant *c0* and *c1* are XOR-ed with *TK1* and *TK2*, the final values are stored as 'RoundKeys'.  The constant *c2* is XOR-ed with the cipher state in encryption (or decryption).
 
 
 [SKINNY]:<https://sites.google.com/site/skinnycipher/>
