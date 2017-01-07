@@ -125,12 +125,11 @@ void RunEncryptionKeySchedule(uint8_t *key, uint8_t *roundKeys)
         // (k4  k5 ) (k6  k7 )        (k10 k14) (k12 k11)
         // (k8  k9 ) (k10 k11) -----> (k0  k1 ) (k2  k3 )
         // (k12 k13) (k14 k15)        (k4  k5 ) (k6  k7 )
-        // Tweak1
+        // Tweakey 1
         "movw         r6,         r12       \n\t"
         "movw         r12,        r8        \n\t"
         "movw         r8,         r14       \n\t"
         "movw         r14,        r10       \n\t"
-
         "mov          r11,        r7        \n\t"
         "and          r11,        r5        \n\t"
         "mov          r10,        r8        \n\t"
@@ -153,7 +152,7 @@ void RunEncryptionKeySchedule(uint8_t *key, uint8_t *roundKeys)
         "and          r6,         r27       \n\t"
         "eor          r8,         r6        \n\t"
         "mov          r9,         r7        \n\t"
-        // Tweak2
+        // Tweakey 2
         "movw         r6,         r20       \n\t"
         "movw         r20,        r16       \n\t"
         "movw         r16,        r22       \n\t"
@@ -181,46 +180,42 @@ void RunEncryptionKeySchedule(uint8_t *key, uint8_t *roundKeys)
         "eor          r16,        r6        \n\t"
         "mov          r17,        r7        \n\t"
         // LFSR
-        "mov          r24,        r16       \n\t" // half of first row
-        "mov          r25,        r24       \n\t"
-        "lsr          r25                   \n\t"
-        "eor          r24,        r25       \n\t"
+        "movw         r24,        r16       \n\t" // half of first row
+        "movw         r6,         r16       \n\t"
+        "lsr          r6                    \n\t"
+        "eor          r24,        r6        \n\t"
         "lsr          r24                   \n\t"
         "lsr          r24                   \n\t"
         "andi         r24,        0x11      \n\t"
         "lsl          r16                   \n\t"
         "andi         r16,        0xee      \n\t"
         "eor          r16,        r24       \n\t"
-        "mov          r24,        r17       \n\t" // half of first row
-        "mov          r25,        r24       \n\t"
+        "lsr          r7                    \n\t" // the other half
+        "eor          r25,        r7        \n\t" // of first row
         "lsr          r25                   \n\t"
-        "eor          r24,        r25       \n\t"
-        "lsr          r24                   \n\t"
-        "lsr          r24                   \n\t"
-        "andi         r24,        0x11      \n\t"
+        "lsr          r25                   \n\t"
+        "andi         r25,        0x11      \n\t"
         "lsl          r17                   \n\t"
         "andi         r17,        0xee      \n\t"
-        "eor          r17,        r24       \n\t"
-        "mov          r24,        r18       \n\t" // half of second row
-        "mov          r25,        r24       \n\t"
-        "lsr          r25                   \n\t"
-        "eor          r24,        r25       \n\t"
+        "eor          r17,        r25       \n\t"
+        "movw         r24,        r18       \n\t" // half of second row
+        "movw         r6,         r18       \n\t"
+        "lsr          r6                    \n\t"
+        "eor          r24,        r6        \n\t"
         "lsr          r24                   \n\t"
         "lsr          r24                   \n\t"
         "andi         r24,        0x11      \n\t"
         "lsl          r18                   \n\t"
         "andi         r18,        0xee      \n\t"
         "eor          r18,        r24       \n\t"
-        "mov          r24,        r19       \n\t" // half of second row
-        "mov          r25,        r24       \n\t"
+        "lsr          r7                    \n\t" // the other half
+        "eor          r25,        r7        \n\t" // of second row
         "lsr          r25                   \n\t"
-        "eor          r24,        r25       \n\t"
-        "lsr          r24                   \n\t"
-        "lsr          r24                   \n\t"
-        "andi         r24,        0x11      \n\t"
+        "lsr          r25                   \n\t"
+        "andi         r25,        0x11      \n\t"
         "lsl          r19                   \n\t"
         "andi         r19,        0xee      \n\t"
-        "eor          r19,        r24       \n\t"
+        "eor          r19,        r25       \n\t"
     "dec              r26                   \n\t"
     "breq             key_schedule_exit     \n\t"
     "rjmp             key_schedule_start    \n\t"
@@ -276,13 +271,13 @@ void RunEncryptionKeySchedule(uint8_t *key, uint8_t *roundKeys)
         "mov          @r15+,        r9            \n\t"
         "mov          @r15+,        r10           \n\t"
         "mov          @r15+,        r11           \n\t"
+        // Leave the memory for temp use
         "sub          #2,           r1            \n\t"
         "mov          %[RC],        r15           \n\t"
         "mov          #36,          r13           \n\t"
     "extend_loop:                                 \n\t"
         // AddRoundConstant
-        "mov.b        @r15+,        r12           \n\t"
-        "mov          r12,          0(r1)         \n\t"
+        "mov.b        @r15,         r12           \n\t"
         "and          #0x000f,      r12           \n\t"
         "rla          r12                         \n\t"
         "rla          r12                         \n\t"
@@ -291,7 +286,7 @@ void RunEncryptionKeySchedule(uint8_t *key, uint8_t *roundKeys)
         "xor          r4,           r12           \n\t"
         "xor          r8,           r12           \n\t"
         "mov          r12,          0(r14)        \n\t"
-        "mov          0(r1),        r12           \n\t"
+        "mov.b        @r15+,        r12           \n\t"
         "and          #0x0030,      r12           \n\t"
         "xor          r5,           r12           \n\t"
         "xor          r9,           r12           \n\t"
@@ -303,7 +298,7 @@ void RunEncryptionKeySchedule(uint8_t *key, uint8_t *roundKeys)
         // r6 (k10 k11 k8  k9)   -----> r6 (k2  k3  k0  k1)
         // r7 (k14 k15 k12 k13)         r7 (k6  k7  k4  k5)
         "mov          r13,          0(r1)         \n\t"
-        // Tweak1 -- First row
+        // Tweakey 1 -- First row
         "mov          r6,           r12           \n\t"
         "mov          r4,           r6            \n\t"
         "mov          r7,           r4            \n\t"
@@ -322,7 +317,7 @@ void RunEncryptionKeySchedule(uint8_t *key, uint8_t *roundKeys)
         "swpb         r5                          \n\t"
         "and          #0xf000,      r5            \n\t"
         "xor          r5,           r4            \n\t"
-        // Tweak1 -- Second row
+        // Tweakey 1 -- Second row
         "mov          r12,          r5            \n\t"
         "and          #0x0f00,      r5            \n\t"
         "swpb         r12                         \n\t"
@@ -337,7 +332,7 @@ void RunEncryptionKeySchedule(uint8_t *key, uint8_t *roundKeys)
         "xor          r12,          r5            \n\t"
         "and          #0xf000,      r13           \n\t"
         "xor          r13,          r5            \n\t"
-        // Tweak2 -- First row
+        // Tweakey 2 -- First row
         "mov          r10,          r12           \n\t"
         "mov          r8,           r10           \n\t"
         "mov          r11,          r8            \n\t"
@@ -356,7 +351,7 @@ void RunEncryptionKeySchedule(uint8_t *key, uint8_t *roundKeys)
         "swpb         r9                          \n\t"
         "and          #0xf000,      r9            \n\t"
         "xor          r9,           r8            \n\t"
-        // Tweak2 -- Second row
+        // Tweakey 2 -- Second row
         "mov          r12,          r9            \n\t"
         "and          #0x0f00,      r9            \n\t"
         "swpb         r12                         \n\t"
@@ -371,7 +366,7 @@ void RunEncryptionKeySchedule(uint8_t *key, uint8_t *roundKeys)
         "xor          r12,          r9            \n\t"
         "and          #0xf000,      r13           \n\t"
         "xor          r13,          r9            \n\t"
-        // LFSR -- Tweak2 First row
+        // LFSR -- Tweakey 2 First row
         "mov          r8,           r12           \n\t"
         "mov          r8,           r13           \n\t"
         "rra          r13                         \n\t"
@@ -382,7 +377,7 @@ void RunEncryptionKeySchedule(uint8_t *key, uint8_t *roundKeys)
         "rla          r8                          \n\t"
         "and          #0xeeee,      r8            \n\t"
         "xor          r13,          r8            \n\t"
-        // LFSR -- Tweak2 Second row
+        // LFSR -- Tweakey 2 Second row
         "mov          r9,           r12           \n\t"
         "mov          r9,           r13           \n\t"
         "rra          r13                         \n\t"
@@ -444,9 +439,9 @@ void RunEncryptionKeySchedule(uint8_t *key, uint8_t *roundKeys)
         "str        r6,       [r1,#0]         \n\t" // store round keys
         "adds       r1,       r1, #4          \n\t"
         // Permutation
+        // Tweakey 1
         // r2(k6  k7  k4  k5  k2  k3  k0  k1)    k12 k11 k10 k14 k8  k13 k9 k15
         // r3(k14 k15 k12 k13 k10 k11 k8  k9) -> k6  k7  k4  k5  k2  k3  k0  k1
-        // Tweak1
         "mov        r6,       r3              \n\t" 
         "mov        r3,       r2              \n\t"
         "rev        r2,       r6              \n\t"
@@ -459,7 +454,7 @@ void RunEncryptionKeySchedule(uint8_t *key, uint8_t *roundKeys)
         "eors       r2,       r2, r7          \n\t"
         "and        r6,       r6, #0xf00      \n\t"
         "eors       r2,       r2, r6, lsl #16 \n\t"
-        // Tweak2
+        // Tweakey 2
         "mov        r6,       r5              \n\t" 
         "mov        r5,       r4              \n\t"
         "rev        r4,       r6              \n\t"
@@ -472,7 +467,7 @@ void RunEncryptionKeySchedule(uint8_t *key, uint8_t *roundKeys)
         "eors       r4,       r4, r7          \n\t"
         "and        r6,       r6, #0xf00      \n\t"
         "eors       r4,       r4, r6, lsl #16 \n\t"
-        // LFSR -- Tweak2
+        // LFSR -- Tweakey 2
         "mov        r6,       r4              \n\t"
         "mov        r7,       r4              \n\t"
         "eor        r6,       r6, r7, lsr #1  \n\t"
