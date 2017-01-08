@@ -1,5 +1,5 @@
 # SKINNY4FELICS
-Implementation of Lightweight Block Cipher [SKINNY] based on [FELICS]. Only the *encryptionKeySchedule.c*, *encrypt.c* and *decrypt.c* are given here. Note that, some optimizations have been given, but this is still NOT the best implementation.
+Implementation of Lightweight Block Cipher [SKINNY] based on [FELICS]. 
 
 Only two versions are given here. They are SKINNY-128-128, whose block size is 128-bit with 128-bit key size, and SKINNY-64-128, whose block size is 64-bit with the same key size.
 
@@ -61,6 +61,8 @@ SBOX_BYTE SBOX[256] = {
     0x9c, 0x96, 0x99, 0x90, 0x91, 0x9a, 0x92, 0x9b, 0x93, 0x98, 0x95, 0x9d, 0x94, 0x9e, 0x97, 0x9f,
 ```
 
+## How To Use
+It runs correctly under FELICS, but here, only *encryptionKeySchedule.c*, *encrypt.c* and *decrypt.c* are given for the two versions. Note that, some optimizations have been given, but this is still NOT the best implementation.
 
 [SKINNY]:<https://sites.google.com/site/skinnycipher/>
 [FELICS]:<https://www.cryptolux.org/index.php/FELICS>
