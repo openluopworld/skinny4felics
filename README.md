@@ -52,8 +52,8 @@ r2 ---> s14 s15 s12 s13 s10 s11 s8  s9  ---> 0xe 0xf 0xc 0xd 0xa 0xb 0x8 0x9
 ```
 
 ## Implementation
-* In key schedule, the round constant *c0* and *c1* are XOR-ed with *TK1* and *TK2* (only for SKINNY-64-128), the final values are stored as 'RoundKeys'.  The constant *c2* is XOR-ed with the cipher state in encryption (or decryption).
-* For SKINNY-64-128, two *SubCells* are done each time. *SBOX* and *Inverse SBOX* are from 8-bit to 8-bit. Parts of *SBOX* are as follows:
+* In key schedule, the round constants *c0* and *c1* are XOR-ed with *TK1* and *TK2* (only for SKINNY-64-128), the final values are stored as *'RoundKeys'*.  The constant *c2* is XOR-ed with the cipher state in encryption (or decryption).
+* For SKINNY-64-128, two *SubCells* are done each time. That is to say, *SBOX* and *Inverse SBOX* are from 8-bit to 8-bit. Parts of *SBOX* are as follows:
 ```C
 SBOX_BYTE SBOX[256] = {
     0xcc, 0xc6, 0xc9, 0xc0, 0xc1, 0xca, 0xc2, 0xcb, 0xc3, 0xc8, 0xc5, 0xcd, 0xc4, 0xce, 0xc7, 0xcf,

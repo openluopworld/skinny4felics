@@ -115,7 +115,7 @@ void Decrypt(uint8_t *block, uint8_t *roundKeys)
         "ldi         r29,          hi8(INV_SBOX)\n\t"
         // encryption
     "dec_loop:                               \n\t"
-        // Inverse MixColumn
+        // Inverse MixColumns
         // eor s0, s12
         // eor s12, s4
         // eor s8, s12
@@ -139,7 +139,7 @@ void Decrypt(uint8_t *block, uint8_t *roundKeys)
         "eor         r11,         r23        \n\t"
         "eor         r23,         r15        \n\t"
         "eor         r19,         r23        \n\t"
-        // Inverse ShiftRows, Inverse AddRoundKeys, Inverse AddConstant
+        // Inverse ShiftRows, Inverse AddRoundTweakey, Inverse AddConstants
         //                s4  s5  s6  s7       r12 r13 r14 r15
         //                s8  s9  s10 s11  =   r16 r17 r18 r19
         // Cipher State   s12 s13 s14 s15  =   r20 r21 r22 r23
@@ -162,7 +162,7 @@ void Decrypt(uint8_t *block, uint8_t *roundKeys)
         "eor         r16,         r6         \n\t"
         "sbiw        r30,         16         \n\t"
         "eor         r22,         r25        \n\t"
-        // Inverse SubColumn
+        // Inverse SubCells
         // The INV_SBOX is stored in RAM. It can also be stored in Flash.
         //                s4  s5  s6  s7       r12 r13 r14 r15
         //                s9  s10 s11 s8   =   r17 r18 r19 r16
@@ -271,7 +271,7 @@ void Decrypt(uint8_t *block, uint8_t *roundKeys)
         "mov         #40,           r13     \n\t"
         "add         #312,          r14     \n\t"
     "dec_loop:                              \n\t"
-        // Inverse MixColumn
+        // Inverse MixColumns
         // s0  s1  s2  s3  |xor s12, s0 |  s4  s5  s6  s7
         // s4  s5  s6  s7  |xor s4,  s12|  s8  s9  s10 s11
         // s8  s9  s10 s11 |xor s12, s8 |  s12 s13 s14 s15
@@ -298,8 +298,8 @@ void Decrypt(uint8_t *block, uint8_t *roundKeys)
         "mov         r11,           10(r15) \n\t"
         "mov         r4,            12(r15) \n\t"
         "mov         r5,            14(r15) \n\t"
-        // Inverse ShiftRows, Inverse AddRoundKeys, Inverse AddConstant
-        // and Inverse SubColumn
+        // Inverse ShiftRows, Inverse AddConstants, Inverse AddRoundTweakey
+        // and Inverse SubCells
         "mov.b       0(r15),        r4      \n\t" // s0' = INV_SBOX[s0]^rks[0]^rc
         "xor.b       @r14+,         r4      \n\t"
         "mov.b       INV_SBOX(r4),  0(r15)  \n\t" 
@@ -374,7 +374,7 @@ void Decrypt(uint8_t *block, uint8_t *roundKeys) {
         "ldmia      r0,       {r2-r5}          \n\t" // load ciphertext
         "adds       r1,       r1, #312         \n\t" // points to last round
     "enc_loop:                                 \n\t"
-        // Inverse MixColumn
+        // Inverse MixColumns
         // eor  s0,  s12
         // eor  s12, s4
         // eor  s8,  s12
@@ -386,17 +386,17 @@ void Decrypt(uint8_t *block, uint8_t *roundKeys) {
         "mov        r3,       r4               \n\t"
         "mov        r4,       r5               \n\t"
         "mov        r5,       r6               \n\t"
-        // Inverse ShiftRow
+        // Inverse ShiftRows
         "rors       r3,       r3, #8           \n\t"
         "rors       r4,       r4, #16          \n\t"
         "rors       r5,       r5, #24          \n\t"
-        // Inverse AddRoundKey and Inverse AddRoundConst
+        // Inverse AddRoundTweakey and Inverse AddConstants
         "ldrd       r6,r7,    [r1,#0]          \n\t"
         "subs       r1,       r1, #8           \n\t"
         "eors       r2,       r2, r6           \n\t"
         "eors       r3,       r3, r7           \n\t"
         "eors       r4,       r4, #0x02        \n\t"
-        // Inverse SubColumn
+        // Inverse SubCells
         // r2 (s3  s2  s1  s0)
         // r3 (s7  s6  s5  s4)
         // r4 (s11 s10 s9  s8)
