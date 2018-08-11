@@ -86,7 +86,7 @@ void Encrypt(uint8_t *block, uint8_t *roundKeys)
         "ldi         r31,         hi8(SBOX) \n\t"
         // encryption
     "enc_loop:                              \n\t"
-        // SubCells
+        // SubCells and the shift in MixColumns of last round
         #if defined(SCENARIO) && (SCENARIO_2 == SCENARIO)
         "ldi         r31,         hi8(SBOX) \n\t"
         #endif
@@ -107,7 +107,7 @@ void Encrypt(uint8_t *block, uint8_t *roundKeys)
         "lpm         r14,         z         \n\t"
         "mov         r30,         r23       \n\t"
         "lpm         r15,         z         \n\t"
-        // AddConstants and AddRoundTweakey
+        // AddRoundConstant and AddRoundKeys
         #if defined(SCENARIO) && (SCENARIO_2 == SCENARIO)
         "movw        r30,         r28       \n\t"
         "lpm         r22,         z+        \n\t"
@@ -131,7 +131,7 @@ void Encrypt(uint8_t *block, uint8_t *roundKeys)
         "eor         r17,         r22       \n\t"
         "eor         r18,         r25       \n\t"
         #endif
-        // ShiftRows, but the third line is unchanged
+        // ShiftRow, but the third line is unchanged
         "swap        r16                    \n\t"
         "swap        r17                    \n\t"
         "mov         r22,         r16       \n\t"
@@ -146,7 +146,7 @@ void Encrypt(uint8_t *block, uint8_t *roundKeys)
         "andi        r22,         0x0f      \n\t"
         "eor         r20,         r22       \n\t"
         "eor         r21,         r22       \n\t"
-        // MixColumns
+        // MixColumn
         "eor         r16,         r19       \n\t"
         "eor         r19,         r14       \n\t"
         "eor         r20,         r19       \n\t"
@@ -195,7 +195,7 @@ void Encrypt(uint8_t *block, uint8_t *roundKeys)
         "mov         4(r15),    r6           \n\t"
         "mov         6(r15),    r7           \n\t"
     "enc_loop:                               \n\t"
-        // SubCells, AddConstants, AddRoundTweakey
+        // SubColumn, AddConstant, AddRoundKeys
         "mov.b       r4,        r12          \n\t" 
         "mov.b       SBOX(r12), r11          \n\t"
         "swpb        r4                      \n\t"
@@ -228,7 +228,7 @@ void Encrypt(uint8_t *block, uint8_t *roundKeys)
         "xor         r11,       r6           \n\t"
         "xor         @r14+,     r6           \n\t"
         "mov         r10,       r5           \n\t" // second line 
-        // ShiftRows
+        // ShiftRow
         "bit         #1,        r6           \n\t"
         "rrc         r6                      \n\t"
         "bit         #1,        r6           \n\t"
@@ -246,7 +246,7 @@ void Encrypt(uint8_t *block, uint8_t *roundKeys)
         "adc         r4                      \n\t"
         "rla         r4                      \n\t"
         "adc         r4                      \n\t"
-        // MixColumns
+        // MixColumn
         "xor         r7,        r6           \n\t"
         "xor         r5,        r7           \n\t"
         "xor         r7,        r4           \n\t"
@@ -285,7 +285,7 @@ void Encrypt(uint8_t *block, uint8_t *roundKeys)
         "mov        r3,       r2, lsr #16      \n\t"
         "mov        r5,       r4, lsr #16      \n\t"
     "enc_loop:                                 \n\t"
-        // SubCells
+        // SubColumn
         // r2 (--  --  --  --  s2  s3  s0  s1)
         // r3 (--  --  --  --  s6  s7  s4  s5)
         // r4 (--  --  --  --  s10 s11 s8  s9)
@@ -314,12 +314,12 @@ void Encrypt(uint8_t *block, uint8_t *roundKeys)
         "and        r6,       r10, r5, lsr #8  \n\t"
         "ldrb       r6,       [r9,r6]          \n\t"
         "bfi        r5,r6,    #8, #8           \n\t"
-        // AddConstants and AddRoundTweakey
+        // AddRoundKey and AddRoundConst
         "ldmia      r1!,      {r6}             \n\t"
         "eors       r2,       r2, r6           \n\t"
         "eors       r3,       r3, r6, lsr #16  \n\t"
         "eors       r4,       r4, #0x20        \n\t"
-        // ShiftRows
+        // ShiftRow
         "mov        r6,       r2               \n\t"
         "bfi        r5,r5,    #16, #12         \n\t"
         "mov        r2,       r5, lsr #12      \n\t"
@@ -327,7 +327,7 @@ void Encrypt(uint8_t *block, uint8_t *roundKeys)
         "bfi        r3,r3,    #16, #4          \n\t"
         "mov        r4,       r3, lsr #4       \n\t"
         "mov        r3,       r6               \n\t"
-        // MixColumns
+        // MixColumn
         "eors       r4,       r4, r5           \n\t"
         "eors       r5,       r5, r3           \n\t"
         "eors       r2,       r2, r5           \n\t"

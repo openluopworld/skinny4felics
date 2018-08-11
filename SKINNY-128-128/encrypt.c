@@ -46,8 +46,9 @@ void Encrypt(uint8_t *block, uint8_t *roundKeys)
     /* r24      : loop control              */
     /* r25      : const 0x02                */
     /* r26-r27  : X points to plain text    */
-    /* r28-r29  : Y points to SBOX          */
-    /* r30-r31  : Z points to roundKeys     */
+    /* r28-r29  : Y points to roundKeys     */
+    /* r30-r31  : Z points to roundKeys in 
+                  scenario2 and SBOX        */
     /* -------------------------------------*/
     // s0  s1  s2  s3       r8  r9  r10 r11
     // s4  s5  s6  s7   =   r12 r13 r14 r15
@@ -81,9 +82,10 @@ void Encrypt(uint8_t *block, uint8_t *roundKeys)
         "push        r17        \n\t"
         "push        r28        \n\t"
         "push        r29        \n\t"
+        "movw        r28, r22   \n\t"
         // load plain text
         // The registers are not in order. This is just to keep
-        // pace with the result of MixColumns.
+        // pace with the result of MixColumn.
         //               s13 s14 s15 s12      r21 r22 r23 r20
         //               s0  s1  s2  s3   =   r8  r9  r10 r11
         // Cipher State: s7  s4  s5  s6   =   r15 r12 r13 r14
@@ -108,11 +110,10 @@ void Encrypt(uint8_t *block, uint8_t *roundKeys)
         "ldi         r24,         40        \n\t"
         // used for constant 0x02
         "ldi         r25,         0x02      \n\t"
-        "ldi         r29,         hi8(SBOX) \n\t"
+        "ldi         r31,         hi8(SBOX) \n\t"
         // encryption
     "enc_loop:                              \n\t"
-        // SubCells with ShiftRows
-        // The SBOX is stored in RAM. It can also be stored in Flash.
+        // SubColumn with ShiftRow
         //               s13 s14 s15 s12      r21 r22 r23 r20
         //               s0  s1  s2  s3   =   r8  r9  r10 r11
         // Cipher State: s7  s4  s5  s6   =   r15 r12 r13 r14
@@ -121,48 +122,52 @@ void Encrypt(uint8_t *block, uint8_t *roundKeys)
         // s4'  = SBOX[s0]   s5'  = SBOX[s1]   s6'  = SBOX[s2]   s6'  = SBOX[s3]
         // s8'  = SBOX[s7]   s9'  = SBOX[s4]   s10' = SBOX[s5]   s11' = SBOX[s6]
         // s12' = SBOX[s10]  s13' = SBOX[s11]  s14' = SBOX[s8]   s15' = SBOX[s9]
+        #if defined(SCENARIO) && (SCENARIO_2 == SCENARIO)
+        "ldi         r31,         hi8(SBOX) \n\t"
+        #endif
         "movw        r6,          r8        \n\t"
-        "mov         r28,         r21       \n\t"
-        "ld          r8,          y         \n\t"
-        "mov         r28,         r19       \n\t"
-        "ld          r21,         y         \n\t"
-        "mov         r28,         r14       \n\t"
-        "ld          r19,         y         \n\t"
-        "mov         r28,         r10       \n\t"
-        "ld          r14,         y         \n\t"
-        "mov         r28,         r23       \n\t"
-        "ld          r10,         y         \n\t"
-        "mov         r28,         r17       \n\t"
-        "ld          r23,         y         \n\t"
-        "mov         r28,         r12       \n\t"
-        "ld          r17,         y         \n\t"
-        "mov         r28,         r6        \n\t"
-        "ld          r12,         y         \n\t"
+        "mov         r30,         r21       \n\t"
+        "lpm         r8,          z         \n\t"
+        "mov         r30,         r19       \n\t"
+        "lpm         r21,         z         \n\t"
+        "mov         r30,         r14       \n\t"
+        "lpm         r19,         z         \n\t"
+        "mov         r30,         r10       \n\t"
+        "lpm         r14,         z         \n\t"
+        "mov         r30,         r23       \n\t"
+        "lpm         r10,         z         \n\t"
+        "mov         r30,         r17       \n\t"
+        "lpm         r23,         z         \n\t"
+        "mov         r30,         r12       \n\t"
+        "lpm         r17,         z         \n\t"
+        "mov         r30,         r6        \n\t"
+        "lpm         r12,         z         \n\t"
         // second part
-        "mov         r28,         r22       \n\t"
-        "ld          r9,          y         \n\t"
-        "mov         r28,         r16       \n\t"
-        "ld          r22,         y         \n\t"
-        "mov         r28,         r15       \n\t"
-        "ld          r16,         y         \n\t"
-        "mov         r28,         r11       \n\t"
-        "ld          r15,         y         \n\t"
-        "mov         r28,         r20       \n\t"
-        "ld          r11,         y         \n\t"
-        "mov         r28,         r18       \n\t"
-        "ld          r20,         y         \n\t"
-        "mov         r28,         r13       \n\t"
-        "ld          r18,         y         \n\t"
-        "mov         r28,         r7        \n\t"
-        "ld          r13,         y         \n\t"
-        // AddConstants and AddRoundTweakey
-        // After 'SubCells and ShiftRows', the registers are in
+        "mov         r30,         r22       \n\t"
+        "lpm         r9,          z         \n\t"
+        "mov         r30,         r16       \n\t"
+        "lpm         r22,         z         \n\t"
+        "mov         r30,         r15       \n\t"
+        "lpm         r16,         z         \n\t"
+        "mov         r30,         r11       \n\t"
+        "lpm         r15,         z         \n\t"
+        "mov         r30,         r20       \n\t"
+        "lpm         r11,         z         \n\t"
+        "mov         r30,         r18       \n\t"
+        "lpm         r20,         z         \n\t"
+        "mov         r30,         r13       \n\t"
+        "lpm         r18,         z         \n\t"
+        "mov         r30,         r7        \n\t"
+        "lpm         r13,         z         \n\t"
+        // AddRoundConstant and AddRoundKeys
+        // After 'SubColumn and ShiftRow', the registers are in
         // right order.
         //               s0  s1  s2  s3       r8  r9  r10 r11
         //               s4  s5  s6  s7   =   r12 r13 r14 r15
         // Cipher State: s8  s9  s10 s11  =   r16 r17 r18 r19
         //               s12 s13 s14 s15      r20 r21 r22 r23
         #if defined(SCENARIO) && (SCENARIO_2 == SCENARIO)
+        "movw        r30,         r28       \n\t"
         "lpm         r6,          z+        \n\t"
         "eor         r8,          r6        \n\t"
         "lpm         r6,          z+        \n\t"
@@ -179,31 +184,32 @@ void Encrypt(uint8_t *block, uint8_t *roundKeys)
         "eor         r14,         r6        \n\t"
         "lpm         r6,          z+        \n\t"
         "eor         r15,         r6        \n\t"
+        "movw        r28,         r30       \n\t"
         "eor         r16,         r25       \n\t"
         #else
-        "ld          r6,          z+        \n\t"
+        "ld          r6,          y+        \n\t"
         "eor         r8,          r6        \n\t"
-        "ld          r6,          z+        \n\t"
+        "ld          r6,          y+        \n\t"
         "eor         r9,          r6        \n\t"
-        "ld          r6,          z+        \n\t"
+        "ld          r6,          y+        \n\t"
         "eor         r10,         r6        \n\t"
-        "ld          r6,          z+        \n\t"
+        "ld          r6,          y+        \n\t"
         "eor         r11,         r6        \n\t"
-        "ld          r6,          z+        \n\t"
+        "ld          r6,          y+        \n\t"
         "eor         r12,         r6        \n\t"
-        "ld          r6,          z+        \n\t"
+        "ld          r6,          y+        \n\t"
         "eor         r13,         r6        \n\t"
-        "ld          r6,          z+        \n\t"
+        "ld          r6,          y+        \n\t"
         "eor         r14,         r6        \n\t"
-        "ld          r6,          z+        \n\t"
+        "ld          r6,          y+        \n\t"
         "eor         r15,         r6        \n\t"
         "eor         r16,         r25       \n\t"
         #endif
-        // MixColumns
-        // After 'MixColumns', the registers are in wrong order.
-        // And this is recovered to right order in 'SubCells' of
-        // the next round. By doing so, the instructions to
-        // implement 'ShiftRows' can be redecues.
+        // MixColumn
+        // After 'MixColumn', the registers are in wrong order.
+        // And this is recovered to right order in 'SubColumn
+        // with ShiftRow' of the next round. By doing so, the
+        // instructions to implement 'ShiftRow' can be redecues.
         // eor  s4,  s8
         // eor  s8,  s0
         // eor  s12, s8
@@ -227,8 +233,14 @@ void Encrypt(uint8_t *block, uint8_t *roundKeys)
         "eor         r14,         r17       \n\t"
         "eor         r17,         r11       \n\t"
         "eor         r20,         r17       \n\t"
-    "dec             r24                    \n\t"
-    "brne            enc_loop               \n\t"
+        "dec         r24                    \n\t"
+        #if defined(SCENARIO) && (SCENARIO_2 == SCENARIO)
+        "breq        enc_end                \n\t"
+        "rjmp        enc_loop               \n\t"
+    "enc_end:                               \n\t"
+        #else
+        "brne        enc_loop               \n\t"
+        #endif
         // store cipher text
         "st          x,           r17       \n\t"
         "st          -x,          r16       \n\t"
@@ -262,7 +274,7 @@ void Encrypt(uint8_t *block, uint8_t *roundKeys)
         "pop         r7         \n\t"
         "pop         r6         \n\t"
     :
-    : [block] "x" (block), [roundKeys] "z" (roundKeys), [SBOX] "" (SBOX));
+    : [block] "x" (block), [roundKeys] "" (roundKeys), [SBOX] "" (SBOX));
 }
 
 #elif defined MSP
@@ -292,7 +304,7 @@ void Encrypt(uint8_t *block, uint8_t *roundKeys)
         "mov         12(r15),   r10          \n\t"
         "mov         14(r15),   r11          \n\t"
     "enc_loop:                               \n\t"
-        // SubCells, AddConstants, AddRoundTweakey and ShiftRows
+        // SubColumn, AddConstant, AddRoundKeys and ShiftRows
         "mov.b       r4,        r12          \n\t" // s0' = SBOX[s0]^(rks[0]^rc)
         "mov.b       SBOX(r12), r12          \n\t"
         "xor.b       @r14+,     r12          \n\t"
@@ -351,7 +363,7 @@ void Encrypt(uint8_t *block, uint8_t *roundKeys)
         "swpb        r11                     \n\t" // s14' = SBOX[s15]
         "mov.b       r11,       r12          \n\t"
         "mov.b       SBOX(r12), 14(r15)      \n\t"
-        // MixColumns
+        // MixColumn
         // xor  s8,  s4
         // xor  s0,  s8
         // xor  s8,  s12
@@ -410,7 +422,7 @@ void Encrypt(uint8_t *block, uint8_t *roundKeys)
         "mov        r10,      #0xff            \n\t"
         "ldmia      r0,       {r2-r5}          \n\t" // load plaintext
     "enc_loop:                                 \n\t"
-        // SubCells
+        // SubColumn
         // r2 (s3  s2  s1  s0)
         // r3 (s7  s6  s5  s4)
         // r4 (s11 s10 s9  s8)
@@ -467,20 +479,20 @@ void Encrypt(uint8_t *block, uint8_t *roundKeys)
         "mov        r6,       r5, lsr #24      \n\t"
         "ldrb       r6,       [r9,r6]          \n\t"
         "bfi        r5,r6,    #24, #8          \n\t"
-        // AddConstants and AddRoundTweakey
+        // AddRoundKey and AddRoundConst
         "ldrd       r6,r7,    [r1,#0]          \n\t"
         "adds       r1,       r1, #8           \n\t"
         "eors       r2,       r2, r6           \n\t"
         "eors       r3,       r3, r7           \n\t"
         "eors       r4,       r4, #0x02        \n\t"
-        // ShiftRows
+        // ShiftRow
         // The data is in little endian, so ShiftRow is inverse.
         // For example, r3 = (s7 s6 s5 s4). It needs rotate shift
         // left (not right) 8 bits to to get r3 = (s6 s5 s4 s7).
         "rors       r3,       r3, #24          \n\t"
         "rors       r4,       r4, #16          \n\t"
         "rors       r5,       r5, #8           \n\t"
-        // MixColumns
+        // MixColumn
         // eor  k4,  k8
         // eor  k8,  k0
         // eor  k12, k8

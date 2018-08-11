@@ -46,8 +46,9 @@ void Decrypt(uint8_t *block, uint8_t *roundKeys)
     /* r24      : loop control              */
     /* r25      : const 0x02                */
     /* r26-r27  : X points to plain text    */
-    /* r28-r29  : y points to inverse sbox  */
-    /* r30-r31  : Z points to roundKeys     */
+    /* r28-r29  : Y points to roundKeys     */
+    /* r30-r31  : Z points to roundKeys in 
+                  scenario2 and inverse SBO */
     /* -------------------------------------*/
     // s0  s1  s2  s3       r8  r9  r10 r11
     // s4  s5  s6  s7   =   r12 r13 r14 r15
@@ -81,6 +82,7 @@ void Decrypt(uint8_t *block, uint8_t *roundKeys)
         "push        r17        \n\t"
         "push        r28        \n\t"
         "push        r29        \n\t"
+        "movw        r28, r22   \n\t"
         // load plain text
         //                s0  s1  s2  s3       r8  r9  r10 r11
         //                s4  s5  s6  s7   =   r12 r13 r14 r15
@@ -105,17 +107,17 @@ void Decrypt(uint8_t *block, uint8_t *roundKeys)
         // point to the round keys of last round
         "ldi         r24,          255       \n\t"
         "clr         r25                     \n\t"
-        "add         r30,          r24       \n\t"
-        "adc         r31,          r25       \n\t"
-        "adiw        r30,          57        \n\t"
+        "add         r28,          r24       \n\t"
+        "adc         r29,          r25       \n\t"
+        "adiw        r28,          57        \n\t"
         // set currentRound
         "ldi         r24,          40        \n\t"
         // used for const 0x02
         "ldi         r25,          0x02      \n\t"
-        "ldi         r29,          hi8(INV_SBOX)\n\t"
+        "ldi         r31,          hi8(INV_SBOX)\n\t"
         // encryption
     "dec_loop:                               \n\t"
-        // Inverse MixColumns
+        // mix column
         // eor s0, s12
         // eor s12, s4
         // eor s8, s12
@@ -139,31 +141,54 @@ void Decrypt(uint8_t *block, uint8_t *roundKeys)
         "eor         r11,         r23        \n\t"
         "eor         r23,         r15        \n\t"
         "eor         r19,         r23        \n\t"
-        // Inverse ShiftRows, Inverse AddRoundTweakey, Inverse AddConstants
+        // shift row, add_round_const_round_key
         //                s4  s5  s6  s7       r12 r13 r14 r15
         //                s8  s9  s10 s11  =   r16 r17 r18 r19
         // Cipher State   s12 s13 s14 s15  =   r20 r21 r22 r23
         //                s0  s1  s2  s3       r8  r9  r10 r11
-        "ld          r6,          z+         \n\t"
+        #if defined(SCENARIO) && (SCENARIO_2 == SCENARIO)
+        "movw        r30,         r28        \n\t"
+        "lpm         r6,          z+         \n\t"
         "eor         r12,         r6         \n\t"
-        "ld          r6,          z+         \n\t"
+        "lpm         r6,          z+         \n\t"
         "eor         r13,         r6         \n\t"
-        "ld          r6,          z+         \n\t"
+        "lpm         r6,          z+         \n\t"
         "eor         r14,         r6         \n\t"
-        "ld          r6,          z+         \n\t"
+        "lpm         r6,          z+         \n\t"
         "eor         r15,         r6         \n\t"
-        "ld          r6,          z+         \n\t"
+        "lpm         r6,          z+         \n\t"
         "eor         r17,         r6         \n\t"
-        "ld          r6,          z+         \n\t"
+        "lpm         r6,          z+         \n\t"
         "eor         r18,         r6         \n\t"
-        "ld          r6,          z+         \n\t"
+        "lpm         r6,          z+         \n\t"
         "eor         r19,         r6         \n\t"
-        "ld          r6,          z+         \n\t"
+        "lpm         r6,          z+         \n\t"
         "eor         r16,         r6         \n\t"
         "sbiw        r30,         16         \n\t"
+        // for next round index of round keys
+        "movw        r28,         r30        \n\t"
         "eor         r22,         r25        \n\t"
-        // Inverse SubCells
-        // The INV_SBOX is stored in RAM. It can also be stored in Flash.
+        #else
+        "ld          r6,          y+         \n\t"
+        "eor         r12,         r6         \n\t"
+        "ld          r6,          y+         \n\t"
+        "eor         r13,         r6         \n\t"
+        "ld          r6,          y+         \n\t"
+        "eor         r14,         r6         \n\t"
+        "ld          r6,          y+         \n\t"
+        "eor         r15,         r6         \n\t"
+        "ld          r6,          y+         \n\t"
+        "eor         r17,         r6         \n\t"
+        "ld          r6,          y+         \n\t"
+        "eor         r18,         r6         \n\t"
+        "ld          r6,          y+         \n\t"
+        "eor         r19,         r6         \n\t"
+        "ld          r6,          y+         \n\t"
+        "eor         r16,         r6         \n\t"
+        "sbiw        r28,         16         \n\t"
+        "eor         r22,         r25        \n\t"
+        #endif
+        // shift_row_with_sub_column
         //                s4  s5  s6  s7       r12 r13 r14 r15
         //                s9  s10 s11 s8   =   r17 r18 r19 r16
         // Cipher State   s14 s15 s12 s13  =   r22 r23 r20 r21
@@ -172,40 +197,43 @@ void Decrypt(uint8_t *block, uint8_t *roundKeys)
         // s4'  = INV[s9]   s5'  = INV[s10]  s6'  = INV[s11]  s6'  = INV[s8]
         // s8'  = INV[s14]  s9'  = INV[s15]  s10' = INV[s12]  s11' = INV[s13]
         // s12' = INV[s3]   s13' = INV[s0]   s14' = INV[s1]   s15' = INV[s2]
+        #if defined(SCENARIO) && (SCENARIO_2 == SCENARIO)
+        "ldi         r31,         hi8(INV_SBOX)\n\t"
+        #endif
         "movw        r6,          r8         \n\t"
-        "mov         r28,         r12        \n\t"
-        "ld          r8,          y          \n\t"
-        "mov         r28,         r17        \n\t"
-        "ld          r12,         y          \n\t"
-        "mov         r28,         r23        \n\t"
-        "ld          r17,         y          \n\t"
-        "mov         r28,         r10        \n\t"
-        "ld          r23,         y          \n\t"
-        "mov         r28,         r14        \n\t"
-        "ld          r10,         y          \n\t"
-        "mov         r28,         r19        \n\t"
-        "ld          r14,         y          \n\t"
-        "mov         r28,         r21        \n\t"
-        "ld          r19,         y          \n\t"
-        "mov         r28,         r6         \n\t"
-        "ld          r21,         y          \n\t"
+        "mov         r30,         r12        \n\t"
+        "lpm         r8,          z          \n\t"
+        "mov         r30,         r17        \n\t"
+        "lpm         r12,         z          \n\t"
+        "mov         r30,         r23        \n\t"
+        "lpm         r17,         z          \n\t"
+        "mov         r30,         r10        \n\t"
+        "lpm         r23,         z          \n\t"
+        "mov         r30,         r14        \n\t"
+        "lpm         r10,         z          \n\t"
+        "mov         r30,         r19        \n\t"
+        "lpm         r14,         z          \n\t"
+        "mov         r30,         r21        \n\t"
+        "lpm         r19,         z          \n\t"
+        "mov         r30,         r6         \n\t"
+        "lpm         r21,         z          \n\t"
         // second part
-        "mov         r28,         r13        \n\t"
-        "ld          r9,          y          \n\t"
-        "mov         r28,         r18        \n\t"
-        "ld          r13,         y          \n\t"
-        "mov         r28,         r20        \n\t"
-        "ld          r18,         y          \n\t"
-        "mov         r28,         r11        \n\t"
-        "ld          r20,         y          \n\t"
-        "mov         r28,         r15        \n\t"
-        "ld          r11,         y          \n\t"
-        "mov         r28,         r16        \n\t"
-        "ld          r15,         y          \n\t"
-        "mov         r28,         r22        \n\t"
-        "ld          r16,         y          \n\t"
-        "mov         r28,         r7         \n\t"
-        "ld          r22,         y          \n\t"
+        "mov         r30,         r13        \n\t"
+        "lpm         r9,          z          \n\t"
+        "mov         r30,         r18        \n\t"
+        "lpm         r13,         z          \n\t"
+        "mov         r30,         r20        \n\t"
+        "lpm         r18,         z          \n\t"
+        "mov         r30,         r11        \n\t"
+        "lpm         r20,         z          \n\t"
+        "mov         r30,         r15        \n\t"
+        "lpm         r11,         z          \n\t"
+        "mov         r30,         r16        \n\t"
+        "lpm         r15,         z          \n\t"
+        "mov         r30,         r22        \n\t"
+        "lpm         r16,         z          \n\t"
+        "mov         r30,         r7         \n\t"
+        "lpm         r22,         z          \n\t"
         "dec         r24                     \n\t"
     "breq            dec_exit                \n\t"
     "rjmp            dec_loop                \n\t"
@@ -247,7 +275,7 @@ void Decrypt(uint8_t *block, uint8_t *roundKeys)
         "pop         r7         \n\t"
         "pop         r6         \n\t"
     :
-    : [block] "x" (block), [roundKeys] "z" (roundKeys), [INV_SBOX] "" (INV_SBOX));
+    : [block] "x" (block), [roundKeys] "" (roundKeys), [INV_SBOX] "" (INV_SBOX));
 }
 
 #elif defined MSP
@@ -271,7 +299,7 @@ void Decrypt(uint8_t *block, uint8_t *roundKeys)
         "mov         #40,           r13     \n\t"
         "add         #312,          r14     \n\t"
     "dec_loop:                              \n\t"
-        // Inverse MixColumns
+        // Inverse MixColumn
         // s0  s1  s2  s3  |xor s12, s0 |  s4  s5  s6  s7
         // s4  s5  s6  s7  |xor s4,  s12|  s8  s9  s10 s11
         // s8  s9  s10 s11 |xor s12, s8 |  s12 s13 s14 s15
@@ -298,8 +326,8 @@ void Decrypt(uint8_t *block, uint8_t *roundKeys)
         "mov         r11,           10(r15) \n\t"
         "mov         r4,            12(r15) \n\t"
         "mov         r5,            14(r15) \n\t"
-        // Inverse ShiftRows, Inverse AddConstants, Inverse AddRoundTweakey
-        // and Inverse SubCells
+        // Inverse ShiftRows, Inverse AddRoundKeys, Inverse AddConstant
+        // and Inverse SubColumn
         "mov.b       0(r15),        r4      \n\t" // s0' = INV_SBOX[s0]^rks[0]^rc
         "xor.b       @r14+,         r4      \n\t"
         "mov.b       INV_SBOX(r4),  0(r15)  \n\t" 
@@ -374,7 +402,7 @@ void Decrypt(uint8_t *block, uint8_t *roundKeys) {
         "ldmia      r0,       {r2-r5}          \n\t" // load ciphertext
         "adds       r1,       r1, #312         \n\t" // points to last round
     "enc_loop:                                 \n\t"
-        // Inverse MixColumns
+        // Inverse MixColumn
         // eor  s0,  s12
         // eor  s12, s4
         // eor  s8,  s12
@@ -386,17 +414,17 @@ void Decrypt(uint8_t *block, uint8_t *roundKeys) {
         "mov        r3,       r4               \n\t"
         "mov        r4,       r5               \n\t"
         "mov        r5,       r6               \n\t"
-        // Inverse ShiftRows
+        // Inverse ShiftRow
         "rors       r3,       r3, #8           \n\t"
         "rors       r4,       r4, #16          \n\t"
         "rors       r5,       r5, #24          \n\t"
-        // Inverse AddRoundTweakey and Inverse AddConstants
+        // Inverse AddRoundKey and Inverse AddRoundConst
         "ldrd       r6,r7,    [r1,#0]          \n\t"
         "subs       r1,       r1, #8           \n\t"
         "eors       r2,       r2, r6           \n\t"
         "eors       r3,       r3, r7           \n\t"
         "eors       r4,       r4, #0x02        \n\t"
-        // Inverse SubCells
+        // Inverse SubColumn
         // r2 (s3  s2  s1  s0)
         // r3 (s7  s6  s5  s4)
         // r4 (s11 s10 s9  s8)
