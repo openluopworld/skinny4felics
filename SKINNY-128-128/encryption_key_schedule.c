@@ -2,6 +2,8 @@
  * SKINNY-128-128
  * @Time 2016
  * @Author luopeng(luopeng@iie.ac.cn)
+ * 
+ * Modified by luopeng, Aug 2018.
  */
 
 /*
